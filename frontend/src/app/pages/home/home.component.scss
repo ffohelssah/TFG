@@ -1,0 +1,43 @@
+.hero {
+  background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url('/assets/images/hero-bg.jpg');
+  background-size: cover;
+  background-position: center;
+  color: white;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.feature-card {
+  transition: transform 0.3s ease;
+  
+  &:hover {
+    transform: translateY(-10px);
+  }
+}
+
+/* Estilos específicos para asegurar que los títulos cambien en modo oscuro */
+:host {
+  h1, h2, h3 {
+    transition: color 0.3s ease;
+  }
+
+  :host-context(.dark) {
+    h1, h2, h3 {
+      color: white !important;
+    }
+  }
+
+  /* Asegurarse que el título principal siempre es blanco en el hero section */
+  .bg-gradient-to-r h1 {
+    color: white !important; 
+  }
+
+  /* Estilos para garantizar que los títulos de secciones cambien color en modo oscuro */
+  .dark h2.text-gray-900 {
+    color: white !important;
+  }
+}
+
+/* Estilos para los botones en modo oscuro */
+.dark .btn-primary {
+  color: white !important;
+} 

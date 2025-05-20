@@ -1,0 +1,22 @@
+footer {
+  border-top: 1px solid #e5e7eb;
+  padding: 1rem 0;
+}
+
+:host ::ng-deep {
+  .footer-title {
+    color: white !important;
+    transition: none !important;
+  }
+  
+  /* Asegurar que el título del footer sea siempre blanco */
+  .footer-title.nav-fixed-color {
+    color: white !important;
+  }
+  
+  &:host-context(.dark) .footer-title,
+  &:host-context(body.dark) .footer-title,
+  &:host-context(:root.dark) .footer-title {
+    color: white !important;
+  }
+} 

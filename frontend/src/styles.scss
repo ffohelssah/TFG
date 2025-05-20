@@ -1,0 +1,198 @@
+/* You can add global styles to this file, and also import other style files */
+@use "tailwindcss";
+
+/* Make sure the dark mode is applied properly */
+:root {
+  color-scheme: light;
+}
+
+:root.dark {
+  color-scheme: dark;
+}
+
+/* Global styles */
+html, body {
+  @apply h-full;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+}
+
+body {
+  @apply bg-gray-50 text-gray-800;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+body.dark {
+  @apply bg-gray-900 text-gray-100;
+}
+
+/* Para los títulos en modo claro y oscuro */
+h1, h2, h3 {
+  @apply text-gray-900;
+  transition: color 0.3s ease;
+}
+
+body.dark h1, 
+body.dark h2, 
+body.dark h3 {
+  color: white;
+}
+
+/* Hero section titles are always white */
+.bg-gradient-to-r h1,
+.bg-gradient-to-r p {
+  color: white !important;
+}
+
+/* Mejorar contraste en submenús y desplegables */
+select, option, .dropdown-menu, .text-gray-600, .text-gray-500, .text-gray-700:not(header *):not(.nav-fixed-color) {
+  @apply text-gray-800;
+}
+
+.dark select, .dark option, .dark .dropdown-menu, .dark .text-gray-600, .dark .text-gray-500, .dark .text-gray-700:not(header *):not(.nav-fixed-color) {
+  @apply text-gray-200;
+}
+
+/* Mejor visibilidad para etiquetas de formulario */
+label, .label {
+  @apply text-gray-800 font-medium;
+}
+
+.dark label, .dark .label {
+  @apply text-gray-200;
+}
+
+.card {
+  @apply rounded-lg bg-white shadow-md p-4;
+}
+
+.dark .card {
+  @apply bg-gray-800;
+}
+
+.btn {
+  @apply py-2 px-4 rounded-md font-medium transition-colors;
+}
+
+.btn-primary {
+  @apply bg-blue-600 text-white hover:bg-blue-700;
+}
+
+.dark .btn-primary {
+  @apply bg-blue-700 hover:bg-blue-800;
+}
+
+.btn-secondary {
+  @apply bg-gray-200 text-gray-800 hover:bg-gray-300;
+}
+
+.dark .btn-secondary {
+  @apply bg-gray-700 text-gray-200 hover:bg-gray-600;
+}
+
+.btn-danger {
+  @apply bg-red-600 text-white hover:bg-red-700;
+}
+
+.dark .btn-danger {
+  @apply bg-red-700 hover:bg-red-800;
+}
+
+.form-input {
+  @apply w-full border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500;
+  padding: 0.5rem 0.75rem;
+}
+
+.dark .form-input {
+  @apply border-gray-600 bg-gray-700 text-white;
+}
+
+/* Para inputs y selects */
+select, input, textarea {
+  @apply border border-gray-300 rounded-md;
+  @apply text-gray-800 bg-white;
+}
+
+.dark select, .dark input, .dark textarea {
+  @apply border-gray-600 bg-gray-700 text-white;
+}
+
+/* Regla específica para la navegación - desabilitar transiciones */
+header nav a, 
+header nav button,
+.nav-fixed-color {
+  transition: none !important;
+  color: #6B7280 !important; /* Valor fijo de gray-500 */
+}
+
+/* Asegurarse que los elementos activos tengan el color correcto */
+.text-blue-600.nav-fixed-color,
+header nav a.text-blue-600,
+header nav button.text-blue-600,
+a.text-blue-600 {
+  color: #2563eb !important; /* Valor fijo de blue-600 */
+}
+
+/* Sobrescribir cualquier cambio en modo oscuro */
+.dark header nav a,
+.dark header nav button,
+.dark .nav-fixed-color,
+:root.dark header nav a,
+:root.dark header nav button,
+:root.dark .nav-fixed-color {
+  color: #6B7280 !important;
+}
+
+/* Mantener el hover consistente */
+header nav a:hover,
+header nav button:hover,
+.nav-fixed-color:hover {
+  color: #3b82f6 !important; /* blue-500 */
+}
+
+/* Mantener los elementos activos en modo oscuro */
+.dark .text-blue-600.nav-fixed-color,
+.dark header nav a.text-blue-600,
+.dark header nav button.text-blue-600,
+.dark a.text-blue-600,
+:root.dark .text-blue-600.nav-fixed-color,
+:root.dark header nav a.text-blue-600,
+:root.dark header nav button.text-blue-600,
+:root.dark a.text-blue-600 {
+  color: #2563eb !important;
+}
+
+/* Regla específica para el título del footer */
+.footer-title {
+  color: white !important;
+}
+
+.dark .footer-title {
+  color: white !important;
+}
+
+/* Sobrescribir cualquier cambio en modo oscuro para nav-fixed-color */
+.dark header nav a,
+.dark header nav button,
+.dark .nav-fixed-color,
+:root.dark header nav a,
+:root.dark header nav button,
+:root.dark .nav-fixed-color {
+  color: #6B7280 !important;
+}
+
+/* Excepción para el título del footer */
+.dark .footer-title.nav-fixed-color,
+:root.dark .footer-title.nav-fixed-color {
+  color: white !important;
+}
+
+/* Regla global para textos que deben mantener su color fijo */
+.fixed-text-color {
+  color: #1f2937 !important; /* Valor exacto de text-gray-900 - negro */
+  transition: none !important;
+}
+
+.dark .fixed-text-color,
+:root.dark .fixed-text-color {
+  color: #1f2937 !important;
+}

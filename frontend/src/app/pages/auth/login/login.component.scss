@@ -1,0 +1,20 @@
+.login-container {
+  min-height: 70vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+:host ::ng-deep {
+  .fixed-text-color {
+    color: #1f2937 !important; /* Valor exacto de text-gray-900 - equivalente a negro */
+    transition: none !important;
+  }
+  
+  /* Asegurar que el texto se mantiene negro en modo oscuro */
+  &:host-context(.dark) .fixed-text-color,
+  &:host-context(body.dark) .fixed-text-color,
+  &:host-context(:root.dark) .fixed-text-color {
+    color: #1f2937 !important;
+  }
+} 

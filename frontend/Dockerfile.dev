@@ -1,0 +1,22 @@
+FROM node:18-alpine
+
+WORKDIR /app
+
+# Copy package.json and package-lock.json
+COPY package*.json ./
+
+# Install dependencies with force flag to ensure Angular dependencies are installed correctly
+RUN npm install --force && \
+    npm install @angular/animations@^19.2.0 --save --force
+
+# Copy PostCSS configuration
+COPY .postcssrc.json ./
+
+# Create empty directories for volume mounts
+RUN mkdir -p src
+
+# Expose port for development server
+EXPOSE 4200
+
+# Start development server with host 0.0.0.0 to be accessible outside container
+CMD ["npm", "run", "start:debug", "--", "--host", "0.0.0.0", "--poll", "500"]

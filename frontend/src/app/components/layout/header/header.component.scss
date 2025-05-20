@@ -1,0 +1,78 @@
+.nav-link {
+  position: relative;
+  
+  &.active {
+    font-weight: bold;
+    
+    &::after {
+      content: '';
+      position: absolute;
+      bottom: -2px;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background-color: currentColor;
+    }
+  }
+}
+
+/* Desactivar transiciones en navegación para evitar cambios de color */
+:host ::ng-deep {
+  .nav-item {
+    transition: none !important;
+    color: #6B7280 !important; /* Valor exacto de text-gray-500 */
+    
+    &:hover {
+      color: #3b82f6 !important; /* blue-500 */
+    }
+    
+    &.text-blue-600 {
+      color: #2563eb !important; /* Valor exacto de text-blue-600 */
+    }
+  }
+  
+  /* Clase para mantener el color del texto fijo independientemente del modo */
+  .nav-fixed-color {
+    transition: none !important;
+    color: #6B7280 !important; /* Valor exacto de text-gray-500 */
+    
+    &:hover {
+      color: #3b82f6 !important; /* blue-500 */
+    }
+    
+    &.text-blue-600 {
+      color: #2563eb !important; /* Valor exacto de text-blue-600 */
+    }
+  }
+  
+  /* Aplicar los colores consistentemente en modo oscuro y claro */
+  &:host-context(.dark) .nav-item,
+  &:host-context(body.dark) .nav-item,
+  &:host-context(:root.dark) .nav-item,
+  &:host-context(.dark) .nav-fixed-color,
+  &:host-context(body.dark) .nav-fixed-color,
+  &:host-context(:root.dark) .nav-fixed-color {
+    color: #6B7280 !important;
+    
+    &:hover {
+      color: #3b82f6 !important;
+    }
+    
+    &.text-blue-600 {
+      color: #2563eb !important;
+    }
+  }
+  
+  /* Asegurar que los enlaces estándar tengan el color correcto */
+  .text-gray-500 {
+    color: #6B7280 !important;
+    
+    &:hover {
+      color: #3b82f6 !important;
+    }
+  }
+  
+  .text-blue-600 {
+    color: #2563eb !important;
+  }
+} 

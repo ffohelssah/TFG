@@ -1,0 +1,87 @@
+<div class="min-h-[calc(100vh-200px)] flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+  <div class="max-w-md w-full space-y-8 bg-white p-8 rounded-lg shadow-md">
+    <div class="text-center">
+      <h2 class="mt-6 text-3xl font-extrabold text-black-900 fixed-text-color">Create a new account</h2>
+      <p class="mt-2 text-sm text-black-600">
+        <span class="fixed-text-color">Or</span>
+        <a routerLink="/login" class="font-medium text-blue-600 hover:text-blue-500">
+          sign in to your existing account
+        </a>
+      </p>
+    </div>
+    
+    <form class="mt-8 space-y-6" (ngSubmit)="onSubmit()">
+      <div class="rounded-md shadow-sm space-y-4">
+        <div>
+          <label for="username" class="block text-sm font-medium text-black-700 fixed-text-color">Username</label>
+          <input 
+            id="username" 
+            name="username" 
+            type="text" 
+            [(ngModel)]="user.username"
+            autocomplete="username" 
+            required 
+            class="form-input text-gray-900"
+            placeholder="johndoe">
+        </div>
+        <div>
+          <label for="email" class="block text-sm font-medium text-black-700 fixed-text-color">Email address</label>
+          <input 
+            id="email" 
+            name="email" 
+            type="email" 
+            [(ngModel)]="user.email"
+            autocomplete="email" 
+            required 
+            class="form-input text-gray-900"
+            placeholder="youremail@example.com">
+        </div>
+        <div>
+          <label for="password" class="block text-sm font-medium text-black-700 fixed-text-color">Password</label>
+          <input 
+            id="password" 
+            name="password" 
+            type="password" 
+            [(ngModel)]="user.password"
+            autocomplete="new-password" 
+            required 
+            class="form-input text-gray-900"
+            placeholder="••••••••">
+        </div>
+        <div>
+          <label for="confirmPassword" class="block text-sm font-medium text-black-700 fixed-text-color">Confirm Password</label>
+          <input 
+            id="confirmPassword" 
+            name="confirmPassword" 
+            type="password" 
+            [(ngModel)]="confirmPassword"
+            autocomplete="new-password" 
+            required 
+            class="form-input text-gray-900"
+            placeholder="••••••••">
+        </div>
+      </div>
+
+      @if (error) {
+        <div class="bg-red-50 border-l-4 border-red-500 p-4">
+          <p class="text-red-700">{{ error }}</p>
+        </div>
+      }
+
+      <div>
+        <button 
+          type="submit" 
+          [disabled]="loading"
+          class="w-full btn btn-primary flex justify-center items-center">
+          <span *ngIf="loading" class="mr-2">
+            <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+          </span>
+          Sign up
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

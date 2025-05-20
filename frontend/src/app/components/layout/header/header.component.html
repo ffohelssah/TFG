@@ -1,0 +1,96 @@
+<header class="bg-white dark:bg-gray-800 shadow">
+  <nav class="container mx-auto px-4 py-3 flex items-center justify-between">
+    <div class="flex items-center">
+      <a routerLink="/" class="text-xl font-bold text-blue-600 nav-fixed-color nav-item">Magic Cards</a>
+    </div>
+
+    <!-- Desktop Navigation -->
+    <div class="hidden md:flex space-x-6 items-center">
+      <a routerLink="/" routerLinkActive="text-blue-600 font-medium" [routerLinkActiveOptions]="{exact: true}" class="text-gray-500 hover:text-blue-500 nav-fixed-color nav-item">Home</a>
+      <a routerLink="/market" routerLinkActive="text-blue-600 font-medium" class="text-gray-500 hover:text-blue-500 nav-fixed-color nav-item">Market</a>
+      
+      @if (authService.isLoggedIn()) {
+        <a routerLink="/my-cards" routerLinkActive="text-blue-600 font-medium" class="text-gray-500 hover:text-blue-500 nav-fixed-color nav-item">My Cards</a>
+        <a routerLink="/chat" routerLinkActive="text-blue-600 font-medium" class="text-gray-500 hover:text-blue-500 nav-fixed-color nav-item">Messages</a>
+        <button (click)="logout()" class="text-gray-500 hover:text-blue-500 nav-fixed-color nav-item">Logout</button>
+      } @else {
+        <a routerLink="/login" routerLinkActive="text-blue-600 font-medium" class="text-gray-500 hover:text-blue-500 nav-fixed-color nav-item">Login</a>
+        <a routerLink="/register" routerLinkActive="text-blue-600 font-medium" class="text-gray-500 hover:text-blue-500 nav-fixed-color nav-item">Register</a>
+      }
+      
+      <!-- Theme Toggle Button -->
+      <button (click)="toggleTheme()" class="ml-2 p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 focus:outline-none" aria-label="Toggle Dark Mode">
+        @if (isDarkMode) {
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-yellow-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+          </svg>
+        } @else {
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+          </svg>
+        }
+      </button>
+    </div>
+
+    <!-- Mobile Menu Button and Theme Toggle-->
+    <div class="md:hidden flex items-center">
+      <!-- Theme Toggle Button for Mobile -->
+      <button (click)="toggleTheme()" class="mr-2 p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 focus:outline-none" aria-label="Toggle Dark Mode">
+        @if (isDarkMode) {
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-yellow-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+          </svg>
+        } @else {
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+          </svg>
+        }
+      </button>
+    
+      <!-- Mobile Menu Button -->  
+      <button (click)="toggleMenu()" class="text-gray-500 nav-fixed-color nav-item focus:outline-none">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+        </svg>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Mobile Navigation -->
+  <div class="md:hidden" [class.hidden]="!isMenuOpen">
+    <div class="px-2 pt-2 pb-3 space-y-1 bg-gray-50 dark:bg-gray-700 shadow-lg">
+      <a routerLink="/" routerLinkActive="bg-blue-100 text-blue-600 font-medium" [routerLinkActiveOptions]="{exact: true}" 
+        class="block px-3 py-2 rounded-md text-base font-medium text-gray-500 hover:bg-blue-50 hover:text-blue-500 nav-fixed-color nav-item">
+        Home
+      </a>
+      <a routerLink="/market" routerLinkActive="bg-blue-100 text-blue-600 font-medium" 
+        class="block px-3 py-2 rounded-md text-base font-medium text-gray-500 hover:bg-blue-50 hover:text-blue-500 nav-fixed-color nav-item">
+        Market
+      </a>
+      
+      @if (authService.isLoggedIn()) {
+        <a routerLink="/my-cards" routerLinkActive="bg-blue-100 text-blue-600 font-medium" 
+          class="block px-3 py-2 rounded-md text-base font-medium text-gray-500 hover:bg-blue-50 hover:text-blue-500 nav-fixed-color nav-item">
+          My Cards
+        </a>
+        <a routerLink="/chat" routerLinkActive="bg-blue-100 text-blue-600 font-medium" 
+          class="block px-3 py-2 rounded-md text-base font-medium text-gray-500 hover:bg-blue-50 hover:text-blue-500 nav-fixed-color nav-item">
+          Messages
+        </a>
+        <button (click)="logout()" 
+          class="w-full text-left block px-3 py-2 rounded-md text-base font-medium text-gray-500 hover:bg-blue-50 hover:text-blue-500 nav-fixed-color nav-item">
+          Logout
+        </button>
+      } @else {
+        <a routerLink="/login" routerLinkActive="bg-blue-100 text-blue-600 font-medium" 
+          class="block px-3 py-2 rounded-md text-base font-medium text-gray-500 hover:bg-blue-50 hover:text-blue-500 nav-fixed-color nav-item">
+          Login
+        </a>
+        <a routerLink="/register" routerLinkActive="bg-blue-100 text-blue-600 font-medium" 
+          class="block px-3 py-2 rounded-md text-base font-medium text-gray-500 hover:bg-blue-50 hover:text-blue-500 nav-fixed-color nav-item">
+          Register
+        </a>
+      }
+    </div>
+  </div>
+</header> 
