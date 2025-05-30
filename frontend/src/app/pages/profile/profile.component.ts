@@ -170,20 +170,20 @@ import { User } from '@models/user';
 
       <!-- Delete Confirmation Modal -->
       <div *ngIf="showDeleteConfirmation" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <div class="bg-white dark:bg-white rounded-lg p-6 max-w-md w-full mx-4">
-          <h3 class="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-900">Confirm Account Deletion</h3>
-          <p class="text-gray-700 dark:text-gray-700 mb-4">
+        <div class="bg-white dark:bg-white rounded-lg p-6 max-w-md w-full mx-4 modal-bg-white">
+          <h3 class="text-lg font-semibold mb-4 modal-text-black">Confirm Account Deletion</h3>
+          <p class="modal-text-gray mb-4">
             Are you sure you want to delete your account? This action cannot be undone.
           </p>
-          <p class="text-gray-700 dark:text-gray-700 mb-6">
-            Type <strong>"DELETE"</strong> to confirm:
+          <p class="modal-text-gray mb-6">
+            Type <strong class="modal-text-black">"DELETE"</strong> to confirm:
           </p>
           
           <input
             type="text"
             [(ngModel)]="deleteConfirmationText"
             placeholder="Type DELETE"
-            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 mb-4"
+            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 mb-4 modal-input"
           />
           
           <div class="flex space-x-3">
@@ -265,6 +265,76 @@ import { User } from '@models/user';
     :host ::ng-deep .dark .text-red-700,
     :host ::ng-deep body.dark .text-red-700 {
       color: #B91C1C !important; /* red-700 */
+    }
+    
+    /* Estilos para el modal de eliminación de cuenta */
+    .modal-bg-white {
+      background-color: white !important;
+    }
+    
+    .modal-text-black {
+      color: #111827 !important;
+    }
+    
+    .modal-text-black * {
+      color: #111827 !important;
+    }
+    
+    .modal-text-gray {
+      color: #4B5563 !important;
+    }
+    
+    .modal-text-gray * {
+      color: #4B5563 !important;
+    }
+    
+    .modal-input {
+      color: #111827 !important;
+      background-color: white !important;
+    }
+    
+    .modal-input::placeholder {
+      color: #6B7280 !important;
+    }
+    
+    .modal-input:focus {
+      color: #111827 !important;
+      background-color: white !important;
+    }
+    
+    /* Force styles for dark mode in modal */
+    :host ::ng-deep .dark .modal-bg-white {
+      background-color: white !important;
+    }
+    
+    :host ::ng-deep .dark .modal-text-black {
+      color: #111827 !important;
+    }
+    
+    :host ::ng-deep .dark .modal-text-black * {
+      color: #111827 !important;
+    }
+    
+    :host ::ng-deep .dark .modal-text-gray {
+      color: #4B5563 !important;
+    }
+    
+    :host ::ng-deep .dark .modal-text-gray * {
+      color: #4B5563 !important;
+    }
+    
+    :host ::ng-deep .dark .modal-input {
+      color: #111827 !important;
+      background-color: white !important;
+    }
+    
+    :host ::ng-deep .dark .modal-input::placeholder {
+      color: #6B7280 !important;
+    }
+    
+    :host ::ng-deep .dark .modal-input:focus {
+      color: #111827 !important;
+      background-color: white !important;
     }
   `]
 })

@@ -1,6 +1,7 @@
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { ModalService } from '../../services/modal.service';
 import { Card } from '../../models/card';
 import { environment } from '../../../environments/environment';
 
@@ -12,7 +13,7 @@ import { environment } from '../../../environments/environment';
     <div class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
       <div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-4xl">
         <div class="flex justify-between items-center mb-4">
-          <h2 class="text-xl font-bold">{{ editMode ? 'Editar Carta' : 'Añadir Nueva Carta' }}</h2>
+          <h2 class="text-xl font-bold text-gray-900 form-title">{{ editMode ? 'Edit Card' : 'Add New Card' }}</h2>
           <button (click)="onCancel()" class="text-gray-500 hover:text-gray-700">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -22,44 +23,44 @@ import { environment } from '../../../environments/environment';
         
         <form [formGroup]="cardForm" (ngSubmit)="onSubmit()">
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <!-- Columna izquierda - Datos básicos -->
+            <!-- Left column - Basic data -->
             <div>
               <div class="mb-4">
-                <label for="name" class="block text-sm font-medium text-gray-700 mb-1">Nombre de la Carta</label>
+                <label for="name" class="block text-sm font-medium text-gray-900 mb-1 form-label">Card Name *</label>
                 <input 
                   type="text" 
                   id="name"
                   formControlName="name"
-                  class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                  placeholder="Ej. Black Lotus"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 form-input"
+                  placeholder="e.g. Black Lotus"
                 >
                 <div *ngIf="cardForm.get('name')?.invalid && cardForm.get('name')?.touched" class="text-red-500 text-sm mt-1">
-                  El nombre de la carta es obligatorio
+                  Card name is required
                 </div>
               </div>
               
               <div class="mb-4">
-                <label for="edition" class="block text-sm font-medium text-gray-700 mb-1">Edición</label>
+                <label for="edition" class="block text-sm font-medium text-gray-900 mb-1 form-label">Edition *</label>
                 <input 
                   type="text" 
                   id="edition"
                   formControlName="edition"
-                  class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                  placeholder="Ej. Alpha"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 form-input"
+                  placeholder="e.g. Alpha"
                 >
                 <div *ngIf="cardForm.get('edition')?.invalid && cardForm.get('edition')?.touched" class="text-red-500 text-sm mt-1">
-                  La edición es obligatoria
+                  Edition is required
                 </div>
               </div>
               
               <div class="mb-4">
-                <label for="condition" class="block text-sm font-medium text-gray-700 mb-1">Estado</label>
+                <label for="condition" class="block text-sm font-medium text-gray-900 mb-1 form-label">Condition *</label>
                 <select 
                   id="condition"
                   formControlName="condition"
-                  class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 form-select"
                 >
-                  <option value="">Selecciona un estado</option>
+                  <option value="">Select a condition</option>
                   <option value="mint">Mint</option>
                   <option value="near mint">Near Mint</option>
                   <option value="excellent">Excellent</option>
@@ -69,17 +70,17 @@ import { environment } from '../../../environments/environment';
                   <option value="poor">Poor</option>
                 </select>
                 <div *ngIf="cardForm.get('condition')?.invalid && cardForm.get('condition')?.touched" class="text-red-500 text-sm mt-1">
-                  El estado es obligatorio
+                  Condition is required
                 </div>
               </div>
               
               <div class="mb-4">
-                <label for="price" class="block text-sm font-medium text-gray-700 mb-1">Precio</label>
+                <label for="price" class="block text-sm font-medium text-gray-900 mb-1 form-label">Price</label>
                 <input 
                   type="number" 
                   id="price"
                   formControlName="price"
-                  class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 form-input"
                   placeholder="0.00"
                   step="0.01"
                   min="0"
@@ -87,10 +88,10 @@ import { environment } from '../../../environments/environment';
               </div>
             </div>
             
-            <!-- Columna derecha - Imagen y descripción -->
+            <!-- Right column - Image and description -->
             <div>
               <div class="mb-4">
-                <label class="block text-sm font-medium text-gray-700 mb-1">Imagen de la Carta</label>
+                <label class="block text-sm font-medium text-gray-900 mb-1 form-label">Card Image *</label>
                 <div 
                   class="border-2 border-dashed border-gray-300 rounded-md p-6 relative"
                   [class.border-indigo-500]="isDragging"
@@ -103,28 +104,28 @@ import { environment } from '../../../environments/environment';
                       <path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                     </svg>
                     
-                    <img *ngIf="imagePreview" [src]="imagePreview" alt="Vista previa" class="mx-auto max-h-48 rounded">
+                    <img *ngIf="imagePreview" [src]="imagePreview" alt="Preview" class="mx-auto max-h-48 rounded">
                     
                     <div *ngIf="!imagePreview" class="mt-2">
-                      <p class="text-sm text-gray-500">
-                        Arrastra y suelta una imagen aquí<br>o
+                      <p class="text-sm text-gray-700 form-text">
+                        Drag and drop an image here<br>or
                       </p>
                       <button 
                         type="button" 
                         class="mt-2 inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                         (click)="fileInput.click()"
                       >
-                        Seleccionar Archivo
+                        Select File
                       </button>
                     </div>
                     <div *ngIf="imagePreview" class="mt-2">
-                      <p class="text-sm text-gray-500">{{ imageName }}</p>
+                      <p class="text-sm text-gray-700 form-text">{{ imageName }}</p>
                       <button 
                         type="button" 
                         class="mt-2 inline-flex items-center px-3 py-1 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none"
                         (click)="removeImage()"
                       >
-                        Cambiar Imagen
+                        Change Image
                       </button>
                     </div>
                   </div>
@@ -137,21 +138,26 @@ import { environment } from '../../../environments/environment';
                   >
                 </div>
                 <div *ngIf="cardForm.get('image')?.invalid && cardForm.get('image')?.touched" class="text-red-500 text-sm mt-1">
-                  La imagen es obligatoria
+                  Image is required
                 </div>
               </div>
               
               <div class="mb-4">
-                <label for="description" class="block text-sm font-medium text-gray-700 mb-1">Descripción (opcional)</label>
+                <label for="description" class="block text-sm font-medium text-gray-900 mb-1 form-label">Description (optional)</label>
                 <textarea 
                   id="description"
                   formControlName="description"
                   rows="5"
-                  class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                  placeholder="Descripción de la carta..."
+                  class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 form-textarea"
+                  placeholder="Card description..."
                 ></textarea>
               </div>
             </div>
+          </div>
+          
+          <!-- Required fields note -->
+          <div class="mb-4">
+            <p class="text-sm text-gray-600 form-note">Fields with * must be filled</p>
           </div>
           
           <div class="flex justify-end space-x-3 mt-6">
@@ -160,21 +166,85 @@ import { environment } from '../../../environments/environment';
               (click)="onCancel()"
               class="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
             >
-              Cancelar
+              Cancel
             </button>
             <button 
               type="submit"
               [disabled]="cardForm.invalid"
               class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:bg-indigo-300"
             >
-              {{ editMode ? 'Actualizar' : 'Guardar' }}
+              {{ editMode ? 'Update' : 'Save' }}
             </button>
           </div>
         </form>
       </div>
     </div>
   `,
-  styles: []
+  styles: [`
+    /* Force all form text elements to be black */
+    :host ::ng-deep .form-title,
+    :host ::ng-deep .form-label,
+    :host ::ng-deep .form-text,
+    :host ::ng-deep .form-note {
+      color: #111827 !important; /* Always black */
+    }
+    
+    :host ::ng-deep .dark .form-title,
+    :host ::ng-deep .dark .form-label,
+    :host ::ng-deep .dark .form-text,
+    :host ::ng-deep .dark .form-note,
+    :host ::ng-deep body.dark .form-title,
+    :host ::ng-deep body.dark .form-label,
+    :host ::ng-deep body.dark .form-text,
+    :host ::ng-deep body.dark .form-note {
+      color: #111827 !important; /* Always black in dark mode too */
+    }
+    
+    /* Force input, select, textarea text to be black */
+    :host ::ng-deep .form-input,
+    :host ::ng-deep .form-select,
+    :host ::ng-deep .form-textarea {
+      color: #111827 !important;
+      background-color: white !important;
+    }
+    
+    :host ::ng-deep .form-input::placeholder,
+    :host ::ng-deep .form-textarea::placeholder {
+      color: #6B7280 !important;
+    }
+    
+    :host ::ng-deep .dark .form-input,
+    :host ::ng-deep .dark .form-select,
+    :host ::ng-deep .dark .form-textarea,
+    :host ::ng-deep body.dark .form-input,
+    :host ::ng-deep body.dark .form-select,
+    :host ::ng-deep body.dark .form-textarea {
+      color: #111827 !important;
+      background-color: white !important;
+    }
+    
+    :host ::ng-deep .dark .form-input::placeholder,
+    :host ::ng-deep .dark .form-textarea::placeholder,
+    :host ::ng-deep body.dark .form-input::placeholder,
+    :host ::ng-deep body.dark .form-textarea::placeholder {
+      color: #6B7280 !important;
+    }
+    
+    /* Force button text to be black */
+    :host ::ng-deep button.text-gray-700 {
+      color: #111827 !important;
+    }
+    
+    :host ::ng-deep .dark button.text-gray-700,
+    :host ::ng-deep body.dark button.text-gray-700 {
+      color: #111827 !important;
+    }
+    
+    /* Error messages stay red */
+    :host ::ng-deep .text-red-500 {
+      color: #EF4444 !important;
+    }
+  `]
 })
 export class CardFormComponent implements OnInit {
   @Input() card: Card | null = null;
@@ -190,7 +260,7 @@ export class CardFormComponent implements OnInit {
   originalImageUrl: string | null = null;
   baseApiUrl = environment.apiUrl.replace('/api', '');
   
-  constructor(private fb: FormBuilder) {
+  constructor(private fb: FormBuilder, private modalService: ModalService) {
     this.cardForm = this.fb.group({
       name: ['', Validators.required],
       edition: ['', Validators.required],
@@ -213,16 +283,13 @@ export class CardFormComponent implements OnInit {
         isListed: this.card.isListed || false
       });
       
-      // Si hay una imagen existente, mostrarla como vista previa
-      if (this.card.imageUrl) {
-        // Guardar la URL original para enviarla al backend
-        this.originalImageUrl = this.card.imageUrl;
-        
-        // La URL ya viene con la URL base desde el componente parent
-        this.imagePreview = this.card.imageUrl;
-        this.imageName = 'Imagen actual';
-        this.cardForm.get('image')?.setValue('existing');
-      }
+      // Guardar la URL original para enviarla al backend
+      this.originalImageUrl = this.card.imageUrl;
+      
+      // La URL ya viene con la URL base desde el componente parent
+      this.imagePreview = this.card.imageUrl;
+      this.imageName = 'Current image';
+      this.cardForm.get('image')?.setValue('existing');
     }
   }
   
@@ -260,7 +327,7 @@ export class CardFormComponent implements OnInit {
   
   processFile(file: File): void {
     if (!file.type.startsWith('image/')) {
-      alert('Por favor selecciona un archivo de imagen válido');
+      this.modalService.showError('Please select a valid image file');
       return;
     }
     
@@ -269,7 +336,7 @@ export class CardFormComponent implements OnInit {
     this.cardForm.get('image')?.setValue(file.name);
     this.originalImageUrl = null;
     
-    // Mostrar la vista previa de la imagen
+    // Show image preview
     const reader = new FileReader();
     reader.onload = (e: any) => {
       this.imagePreview = e.target.result;

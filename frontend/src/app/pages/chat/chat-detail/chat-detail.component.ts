@@ -6,6 +6,7 @@ import { ChatService } from '@services/chat.service';
 import { SocketService } from '@services/socket.service';
 import { AuthService } from '@services/auth.service';
 import { NotificationService } from '@services/notification.service';
+import { ModalService } from '../../../services/modal.service';
 import { TradeControlsComponent } from '../../../components/trade/trade-controls/trade-controls.component';
 import { Trade } from '../../../services/trade.service';
 import { Chat } from '@models/chat';
@@ -37,14 +38,14 @@ import { User } from '@models/user';
       <div *ngIf="!loading && !error && chat" class="h-full flex flex-col bg-white dark:bg-white rounded-lg shadow-lg chat-bg-white">
         <!-- Chat Header -->
         <div class="p-4 border-b bg-gray-50 dark:bg-gray-50 flex items-center">
-          <button (click)="goBack()" class="mr-4 text-gray-600 dark:text-gray-600 hover:text-gray-800 dark:hover:text-gray-800">
+          <button (click)="goBack()" class="mr-4 text-gray-600 dark:text-gray-600 hover:text-gray-800 dark:hover:text-gray-800 chat-back-icon">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
             </svg>
           </button>
           <div class="flex-1">
             <h2 class="text-lg font-semibold chat-text-black">{{ getCardName() }}</h2>
-            <p class="text-sm chat-text-gray">Con {{ getOtherUser()?.username }}</p>
+            <p class="text-sm chat-text-gray">With {{ getOtherUser()?.username }}</p>
           </div>
           <!-- Trade Status Indicator -->
           <div *ngIf="currentTrade" class="flex items-center space-x-2">
@@ -67,7 +68,7 @@ import { User } from '@models/user';
         <!-- Messages Area -->
         <div class="flex-1 overflow-y-auto p-4 space-y-4" #messageContainer>
           <div *ngIf="messages.length === 0" class="text-center text-gray-500 dark:text-gray-500 py-8">
-            <p>No messages yet. Start the conversation!</p>
+            <p class="chat-no-messages">No messages yet. Start the conversation!</p>
           </div>
           
           <div *ngFor="let message of messages" 
@@ -102,7 +103,7 @@ import { User } from '@models/user';
               [(ngModel)]="newMessage" 
               name="message"
               placeholder="Type a message..."
-              class="flex-1 rounded-lg border border-gray-300 px-4 py-2 focus:outline-none focus:border-blue-500 text-gray-900 dark:text-gray-900 bg-white dark:bg-white"
+              class="flex-1 rounded-lg border border-gray-300 px-4 py-2 focus:outline-none focus:border-blue-500 text-gray-900 dark:text-gray-900 bg-white dark:bg-white chat-input"
             >
             <button 
               type="submit"
@@ -140,14 +141,75 @@ import { User } from '@models/user';
       background-color: white !important;
     }
     
-    /* Forzar estilos específicos para modo oscuro */
+    /* Force back icon to be black */
+    .chat-back-icon {
+      color: #111827 !important;
+    }
+    
+    .chat-back-icon:hover {
+      color: #000000 !important;
+    }
+    
+    /* Force "no messages" text to be black */
+    .chat-no-messages {
+      color: #111827 !important;
+    }
+    
+    /* Force input text colors */
+    .chat-input {
+      color: #111827 !important;
+      background-color: white !important;
+    }
+    
+    .chat-input::placeholder {
+      color: #6B7280 !important;
+    }
+    
+    .chat-input:focus {
+      color: #111827 !important;
+      background-color: white !important;
+    }
+    
+    /* Force styles for dark mode */
     :host ::ng-deep .dark .chat-text-black {
+      color: #111827 !important;
+    }
+    :host ::ng-deep .dark .chat-text-black * {
       color: #111827 !important;
     }
     :host ::ng-deep .dark .chat-text-gray {
       color: #4B5563 !important;
     }
+    :host ::ng-deep .dark .chat-text-gray * {
+      color: #4B5563 !important;
+    }
     :host ::ng-deep .dark .chat-bg-white {
+      background-color: white !important;
+    }
+    
+    /* Force back icon to be black in dark mode */
+    :host ::ng-deep .dark .chat-back-icon {
+      color: #111827 !important;
+    }
+    
+    :host ::ng-deep .dark .chat-back-icon:hover {
+      color: #000000 !important;
+    }
+    
+    /* Force "no messages" text to be black in dark mode */
+    :host ::ng-deep .dark .chat-no-messages {
+      color: #111827 !important;
+    }
+    
+    :host ::ng-deep .dark .chat-input {
+      color: #111827 !important;
+      background-color: white !important;
+    }
+    :host ::ng-deep .dark .chat-input::placeholder {
+      color: #6B7280 !important;
+    }
+    :host ::ng-deep .dark .chat-input:focus {
+      color: #111827 !important;
       background-color: white !important;
     }
   `]
@@ -168,7 +230,8 @@ export class ChatDetailComponent implements OnInit, OnDestroy {
     private chatService: ChatService,
     private socketService: SocketService,
     private authService: AuthService,
-    private notificationService: NotificationService
+    private notificationService: NotificationService,
+    private modalService: ModalService
   ) {}
 
   ngOnInit(): void {
@@ -276,26 +339,29 @@ export class ChatDetailComponent implements OnInit, OnDestroy {
     
     // Si el trade fue rechazado, el chat será eliminado
     if (trade?.status === 'rejected') {
-      this.handleChatDeleted('Trade was rejected. The conversation has been deleted.');
+      this.handleChatDeleted(''); // No mostrar mensaje adicional, ya se mostró en el component
+    }
+    // Si el trade fue completado, manejar el éxito
+    else if (trade?.status === 'completed') {
+      this.handleChatDeleted('Trade completed successfully! The card has been transferred.');
     }
   }
 
   onTradeCompleted(): void {
     // Cuando el trade se completa o rechaza, el chat es eliminado
+    // No mostrar mensaje aquí ya que se maneja en onTradeUpdated
     this.handleChatDeleted('');
   }
 
   private handleChatDeleted(message: string): void {
     this.redirecting = true;
     
-    // Mostrar mensaje si se proporciona
+    // Show modal only if message is provided
     if (message) {
-      alert(message);
-    } else {
-      alert('Trade completed successfully! The card has been transferred. Redirecting...');
+      this.modalService.showInfo(message);
     }
     
-    // Redirigir a la lista de chats después de un breve delay
+    // Redirect to chat list after a brief delay
     setTimeout(() => {
       this.router.navigate(['/chat']);
     }, 1000);

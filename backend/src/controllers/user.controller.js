@@ -3,7 +3,32 @@ const path = require('path');
 const fs = require('fs');
 const { sequelize } = require('../config/database');
 
-// Actualizar perfil de usuario
+// ================================================================================================
+// CONTROLADOR DE USUARIOS - USER CONTROLLER
+// ================================================================================================
+// Este controlador maneja operaciones específicas de gestión de usuarios:
+// 1. Actualización de perfiles con gestión de imágenes
+// 2. Cambio de contraseñas con validación
+// 3. Consulta de perfiles públicos
+// 
+// CARACTERÍSTICAS PRINCIPALES:
+// - Gestión completa de imágenes de perfil (subida, actualización, eliminación)
+// - Validación de unicidad de username y email
+// - Verificación de contraseña actual antes de cambios
+// - Respuestas seguras sin datos sensibles
+// ================================================================================================
+
+// ============================================================================================
+// IMPORTACIONES
+// ============================================================================================
+
+// ============================================================================================
+// ACTUALIZAR PERFIL DE USUARIO
+// ============================================================================================
+// Endpoint: PUT /api/users/profile
+// Función: Modificar información del perfil incluyendo imagen
+// Validaciones: Username y email únicos, usuario autenticado
+// Gestión de archivos: Reemplazo automático de imagen anterior
 const updateProfile = async (req, res) => {
   try {
     const { username, email } = req.body;
@@ -71,7 +96,13 @@ const updateProfile = async (req, res) => {
   }
 };
 
-// Cambiar contraseña
+// ============================================================================================
+// CAMBIAR CONTRASEÑA
+// ============================================================================================
+// Endpoint: PUT /api/users/password
+// Función: Actualizar contraseña del usuario
+// Seguridad: Verificación obligatoria de contraseña actual
+// Hashing: Automático mediante hooks del modelo User
 const changePassword = async (req, res) => {
   try {
     const { currentPassword, newPassword } = req.body;
@@ -92,7 +123,13 @@ const changePassword = async (req, res) => {
   }
 };
 
-// Obtener perfil público de otro usuario
+// ============================================================================================
+// OBTENER PERFIL PÚBLICO
+// ============================================================================================
+// Endpoint: GET /api/users/:id/public
+// Función: Recuperar información pública de cualquier usuario
+// Filtrado: Solo datos no sensibles (sin email, sin password)
+// Uso: Para mostrar información de vendedores/compradores
 const getPublicProfile = async (req, res) => {
   try {
     const { id } = req.params;

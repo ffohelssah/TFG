@@ -1,7 +1,34 @@
 const { Chat, Message, User, Market, Card } = require('../models');
 const { sequelize, Op } = require('../config/database');
 
-// Crear un nuevo chat
+// ================================================================================================
+// CONTROLADOR DE CHAT - CHAT CONTROLLER
+// ================================================================================================
+// Este controlador maneja todas las operaciones del sistema de mensajería en tiempo real:
+// 1. Creación de conversaciones entre compradores y vendedores
+// 2. Gestión de mensajes y notificaciones
+// 3. Control de estados de lectura
+// 4. Limpieza y mantenimiento de chats
+// 
+// CARACTERÍSTICAS PRINCIPALES:
+// - Chats vinculados a listados específicos del mercado
+// - Prevención de auto-conversaciones (vendedor consigo mismo)
+// - Gestión automática de estados de lectura
+// - Detección y limpieza de chats huérfanos
+// - Actualización de actividad en tiempo real
+// ================================================================================================
+
+// ============================================================================================
+// IMPORTACIONES
+// ============================================================================================
+
+// ============================================================================================
+// CREAR NUEVO CHAT
+// ============================================================================================
+// Endpoint: POST /api/chats
+// Función: Iniciar conversación entre comprador potencial y vendedor
+// Validaciones: Listado válido, no autoconversación, chat único por listado
+// Lógica: Reutilización de chats existentes para mismo par usuario-listado
 const createChat = async (req, res) => {
   try {
     const { marketId } = req.body;
@@ -56,7 +83,13 @@ const createChat = async (req, res) => {
   }
 };
 
-// Obtener chats del usuario
+// ============================================================================================
+// OBTENER CHATS DEL USUARIO
+// ============================================================================================
+// Endpoint: GET /api/chats
+// Función: Recuperar todas las conversaciones activas del usuario
+// Includes: Datos de participantes, información del listado y carta
+// Filtrado: Solo chats válidos con mercado asociado, ordenados por actividad
 const getUserChats = async (req, res) => {
   try {
     const userId = req.user.id;
@@ -111,7 +144,13 @@ const getUserChats = async (req, res) => {
   }
 };
 
-// Obtener mensajes de un chat
+// ============================================================================================
+// OBTENER MENSAJES DE UN CHAT
+// ============================================================================================
+// Endpoint: GET /api/chats/:chatId/messages
+// Función: Recuperar historial completo de mensajes de una conversación
+// Efectos secundarios: Marca automáticamente mensajes como leídos
+// Includes: Información del remitente y detalles del chat
 const getChatMessages = async (req, res) => {
   try {
     const { chatId } = req.params;
@@ -191,7 +230,13 @@ const getChatMessages = async (req, res) => {
   }
 };
 
-// Enviar un mensaje
+// ============================================================================================
+// ENVIAR MENSAJE
+// ============================================================================================
+// Endpoint: POST /api/chats/:chatId/messages
+// Función: Crear y enviar nuevo mensaje en una conversación
+// Efectos secundarios: Actualiza timestamp de última actividad del chat
+// Validación: Verificar participación del usuario en el chat
 const sendMessage = async (req, res) => {
   try {
     const { chatId } = req.params;
@@ -239,7 +284,13 @@ const sendMessage = async (req, res) => {
   }
 };
 
-// Marcar mensajes como leídos
+// ============================================================================================
+// MARCAR MENSAJES COMO LEÍDOS
+// ============================================================================================
+// Endpoint: PUT /api/chats/:chatId/read
+// Función: Marcar todos los mensajes no leídos del chat como leídos
+// Scope: Solo mensajes enviados por otros usuarios (no propios)
+// Respuesta: Contador de mensajes actualizados
 const markAsRead = async (req, res) => {
   try {
     const { chatId } = req.params;
@@ -282,7 +333,13 @@ const markAsRead = async (req, res) => {
   }
 };
 
-// Obtener conteo de mensajes no leídos
+// ============================================================================================
+// OBTENER CONTEO DE MENSAJES NO LEÍDOS
+// ============================================================================================
+// Endpoint: GET /api/chats/unread-counts
+// Función: Calcular total de mensajes no leídos para notificaciones
+// Agregación: Total global y lista de chats con mensajes pendientes
+// Performance: Consulta optimizada con agrupación por chat
 const getUnreadCounts = async (req, res) => {
   try {
     const userId = req.user.id;
@@ -335,7 +392,13 @@ const getUnreadCounts = async (req, res) => {
   }
 };
 
-// Limpiar chats huérfanos (sin market asociado)
+// ============================================================================================
+// LIMPIAR CHATS HUÉRFANOS
+// ============================================================================================
+// Endpoint: DELETE /api/chats/cleanup-orphaned
+// Función: Eliminar chats que perdieron su listado asociado
+// Uso: Mantenimiento de base de datos, evitar inconsistencias
+// Detección: Chats sin mercado válido asociado
 const cleanupOrphanedChats = async (req, res) => {
   try {
     // Buscar chats que no tienen market asociado

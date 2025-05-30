@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { MarketService } from '../../services/market.service';
 import { ChatService } from '../../services/chat.service';
 import { AuthService } from '../../services/auth.service';
+import { ModalService } from '../../services/modal.service';
 import { Market } from '../../models/market';
 import { environment } from '../../../environments/environment';
 
@@ -190,7 +191,8 @@ export class MarketComponent implements OnInit {
     private marketService: MarketService,
     private chatService: ChatService,
     private authService: AuthService,
-    private router: Router
+    private router: Router,
+    private modalService: ModalService
   ) {}
   
   ngOnInit(): void {
@@ -299,12 +301,12 @@ export class MarketComponent implements OnInit {
           this.router.navigate(['/chat', response.chat.id]);
         } else {
           console.error('Invalid chat response:', response);
-          alert('Error starting conversation: Invalid response from server');
+          this.modalService.showError('Error starting conversation: Invalid response from server');
         }
       },
       error: (error) => {
         console.error('Error creating chat:', error);
-        alert('Error starting conversation. Please try again later.');
+        this.modalService.showError('Error starting conversation. Please try again later.');
       }
     });
   }

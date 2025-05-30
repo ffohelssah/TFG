@@ -1,6 +1,30 @@
+// ================================================================================================
+// VALIDADORES DE ENTRADA - VALIDATORS
+// ================================================================================================
+// Este archivo centraliza todas las validaciones de entrada para las APIs del sistema.
+// Utiliza express-validator para validar body, params y query strings de las requests.
+// 
+// GRUPOS DE VALIDADORES:
+// - authValidators: Registro, login y autenticación
+// - cardValidators: CRUD de cartas y gestión de colecciones
+// - marketValidators: Listados del marketplace y búsquedas
+// - chatValidators: Mensajería y conversaciones
+// - userValidators: Gestión de perfiles de usuario
+// 
+// CARACTERÍSTICAS:
+// - Validaciones tipadas (int, float, email, etc.)
+// - Mensajes de error descriptivos en español
+// - Sanitización automática (trim, normalizeEmail)
+// - Validaciones opcionales para updates parciales
+// ================================================================================================
+
 const { body, param, query } = require('express-validator');
 
-// Validadores para autenticación
+// ============================================================================================
+// VALIDADORES DE AUTENTICACIÓN
+// ============================================================================================
+// Validaciones para registro, login y gestión de sesiones
+// Incluye verificación de formato de email, longitud de contraseñas y caracteres válidos
 const authValidators = {
   register: [
     body('username')
@@ -34,7 +58,11 @@ const authValidators = {
   ]
 };
 
-// Validadores para cartas
+// ============================================================================================
+// VALIDADORES DE CARTAS
+// ============================================================================================
+// Validaciones para CRUD completo de cartas coleccionables
+// Enum estricto para condiciones, validaciones de ID y campos opcionales para updates
 const cardValidators = {
   create: [
     body('name')
@@ -98,7 +126,11 @@ const cardValidators = {
   ]
 };
 
-// Validadores para el mercado
+// ============================================================================================
+// VALIDADORES DEL MERCADO
+// ============================================================================================
+// Validaciones para marketplace: listados, búsquedas y paginación
+// Control de rangos para precios, estados válidos y límites de paginación
 const marketValidators = {
   listCard: [
     body('cardId')
@@ -164,7 +196,11 @@ const marketValidators = {
   ]
 };
 
-// Validadores para chat
+// ============================================================================================
+// VALIDADORES DE CHAT
+// ============================================================================================
+// Validaciones para sistema de mensajería en tiempo real
+// Verificación de IDs de chat, contenido de mensajes y parámetros de marcado
 const chatValidators = {
   create: [
     body('marketId')
@@ -196,7 +232,11 @@ const chatValidators = {
   ]
 };
 
-// Validadores para usuario
+// ============================================================================================
+// VALIDADORES DE USUARIO
+// ============================================================================================
+// Validaciones para gestión de perfiles y cambios de contraseña
+// Campos opcionales para updates, verificación de contraseña actual
 const userValidators = {
   updateProfile: [
     body('username')

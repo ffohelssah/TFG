@@ -5,6 +5,27 @@ import { Router } from '@angular/router';
 import { User, AuthResponse } from '../models/user';
 import { environment } from '../../environments/environment';
 
+// ================================================================================================
+// SERVICIO DE AUTENTICACIÓN - AUTH SERVICE
+// ================================================================================================
+// Este servicio centraliza toda la lógica de autenticación y autorización del frontend.
+// Maneja el ciclo completo de sesiones de usuario incluyendo login, registro y gestión de tokens.
+// 
+// CARACTERÍSTICAS PRINCIPALES:
+// - Gestión de tokens JWT con expiración automática
+// - Sistema de renovación de sesión
+// - Estado reactivo del usuario actual
+// - Persistencia segura en localStorage
+// - Auto-logout por expiración
+// - Decodificación y validación de tokens
+// 
+// FUNCIONALIDADES:
+// - Login y registro de usuarios
+// - Gestión de perfiles y contraseñas
+// - Verificación de estado de autenticación
+// - Manejo de errores HTTP
+// ================================================================================================
+
 @Injectable({
   providedIn: 'root'
 })
@@ -27,6 +48,12 @@ export class AuthService {
     }, 100);
   }
 
+  // ========================================================================================
+  // CARGA DE USUARIO ALMACENADO
+  // ========================================================================================
+  // Función: Restaurar sesión desde localStorage al inicializar
+  // Validaciones: Token válido, no expirado, decodificación correcta
+  // Efectos: Auto-logout si sesión inválida
   private loadStoredUser() {
     const token = localStorage.getItem(this.tokenKey);
     const expiry = localStorage.getItem(this.tokenExpiryKey);
@@ -69,6 +96,11 @@ export class AuthService {
     }
   }
 
+  // ========================================================================================
+  // CONFIGURACIÓN DE TIMER DE EXPIRACIÓN
+  // ========================================================================================
+  // Función: Programar logout automático basado en tiempo de expiración
+  // Optimización: Limpia timers anteriores para evitar memory leaks
   private setupExpiryTimer() {
     if (this.expiryTimer) {
       clearTimeout(this.expiryTimer);
@@ -109,6 +141,15 @@ export class AuthService {
     }
   }
 
+  // ============================================================================================
+  // MÉTODOS PÚBLICOS DE AUTENTICACIÓN
+  // ============================================================================================
+
+  // ========================================================================================
+  // LOGIN DE USUARIO
+  // ========================================================================================
+  // Función: Autenticar usuario con credenciales
+  // Efectos: Almacena token, actualiza estado global, programa expiración
   login(email: string, password: string): Observable<AuthResponse> {
     return this.http
       .post<AuthResponse>(`${this.apiUrl}/login`, { email, password })
@@ -120,6 +161,11 @@ export class AuthService {
       );
   }
 
+  // ========================================================================================
+  // REGISTRO DE USUARIO
+  // ========================================================================================
+  // Función: Crear nueva cuenta de usuario
+  // Efectos: Login automático después de registro exitoso
   register(user: User): Observable<AuthResponse> {
     return this.http
       .post<AuthResponse>(`${this.apiUrl}/register`, user)
@@ -131,6 +177,11 @@ export class AuthService {
       );
   }
 
+  // ========================================================================================
+  // LOGOUT DE USUARIO
+  // ========================================================================================
+  // Función: Cerrar sesión y limpiar datos almacenados
+  // Efectos: Limpia localStorage, cancela timers, redirecciona a home
   logout() {
     if (this.expiryTimer) {
       clearTimeout(this.expiryTimer);
@@ -144,6 +195,11 @@ export class AuthService {
     this.router.navigate(['/']);
   }
 
+  // ========================================================================================
+  // OBTENER PERFIL DEL USUARIO
+  // ========================================================================================
+  // Función: Recuperar datos actualizados del usuario autenticado
+  // Efectos: Actualiza estado global del usuario
   getProfile(): Observable<User> {
     return this.http.get<{ user: User }>(`${this.apiUrl}/profile`)
       .pipe(
@@ -160,6 +216,11 @@ export class AuthService {
       );
   }
 
+  // ========================================================================================
+  // OBTENER TOKEN VÁLIDO
+  // ========================================================================================
+  // Función: Recuperar token JWT si está válido y no expirado
+  // Validaciones: Existencia, expiración, auto-logout si inválido
   getToken(): string | null {
     const token = localStorage.getItem(this.tokenKey);
     const expiry = localStorage.getItem(this.tokenExpiryKey);
@@ -179,6 +240,11 @@ export class AuthService {
     return null;
   }
 
+  // ========================================================================================
+  // VERIFICAR ESTADO DE AUTENTICACIÓN
+  // ========================================================================================
+  // Función: Determinar si el usuario está logueado
+  // Validaciones: Token válido y no expirado
   isLoggedIn(): boolean {
     const token = localStorage.getItem(this.tokenKey);
     const expiry = localStorage.getItem(this.tokenExpiryKey);
@@ -242,6 +308,15 @@ export class AuthService {
     return throwError(() => new Error(errorMessage));
   }
 
+  // ============================================================================================
+  // MÉTODOS DE GESTIÓN DE PERFIL
+  // ============================================================================================
+
+  // ========================================================================================
+  // ACTUALIZAR PERFIL
+  // ========================================================================================
+  // Función: Modificar información del perfil del usuario
+  // Efectos: Actualiza estado global con datos nuevos
   updateProfile(profileData: { username: string; email: string }): Observable<User> {
     return this.http.put<User>(`${this.apiUrl}/profile`, profileData).pipe(
       tap((updatedUser: User) => {
@@ -250,10 +325,20 @@ export class AuthService {
     );
   }
 
+  // ========================================================================================
+  // CAMBIAR CONTRASEÑA
+  // ========================================================================================
+  // Función: Actualizar contraseña del usuario autenticado
+  // Validaciones: Contraseña actual requerida
   updatePassword(passwordData: { currentPassword: string; newPassword: string }): Observable<any> {
     return this.http.put(`${this.apiUrl}/password`, passwordData);
   }
 
+  // ========================================================================================
+  // ELIMINAR CUENTA
+  // ========================================================================================
+  // Función: Eliminar permanentemente la cuenta del usuario
+  // Efectos: Eliminación completa de datos y cierre de sesión
   deleteAccount(): Observable<any> {
     return this.http.delete(`${this.apiUrl}/account`);
   }

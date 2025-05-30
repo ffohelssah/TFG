@@ -1,15 +1,44 @@
-const { User } = require('../models');
-const { generateToken } = require('../config/jwt');
-const { sequelize, Op } = require('../config/database');
+// ================================================================================================
+// CONTROLADOR DE AUTENTICACIÓN - AUTH CONTROLLER
+// ================================================================================================
+// Este controlador maneja todas las operaciones relacionadas con la autenticación y autorización:
+// 1. Registro de nuevos usuarios
+// 2. Login y generación de tokens JWT
+// 3. Gestión de perfiles de usuario
+// 4. Cambio de contraseñas
+// 5. Eliminación de cuentas
+// 
+// SEGURIDAD IMPLEMENTADA:
+// - Verificación de credenciales
+// - Validación de usuarios únicos
+// - Hashing de contraseñas (en modelo User)
+// - Tokens JWT para sesiones
+// - Filtrado de datos sensibles en respuestas
+// ================================================================================================
 
-// Registrar nuevo usuario
+// ============================================================================================
+// IMPORTACIONES
+// ============================================================================================
+const { User } = require('../models');            // Modelo de usuario
+const { generateToken } = require('../config/jwt'); // Utilidad para generar JWT
+const { sequelize, Op } = require('../config/database'); // Operadores de Sequelize
+
+// ============================================================================================
+// REGISTRO DE NUEVO USUARIO
+// ============================================================================================
+// Endpoint: POST /api/auth/register
+// Función: Crear una nueva cuenta de usuario en el sistema
+// Validaciones: Username y email únicos, datos requeridos
 const register = async (req, res) => {
   try {
     const { username, email, password } = req.body;
 
     console.log('Datos de registro recibidos:', { username, email, password: '***' });
 
-    // Verificar si el usuario ya existe (usando sintaxis alternativa)
+    // ========================================================================================
+    // VALIDACIÓN DE USUARIOS EXISTENTES
+    // ========================================================================================
+    // Verificar si ya existe un usuario con el mismo username o email
     const existingUserByUsername = await User.findOne({ where: { username } });
     const existingUserByEmail = await User.findOne({ where: { email } });
 
@@ -19,17 +48,26 @@ const register = async (req, res) => {
       });
     }
 
-    // Crear nuevo usuario
+    // ========================================================================================
+    // CREACIÓN DEL USUARIO
+    // ========================================================================================
+    // Crear nuevo usuario (el password se hashea automáticamente en el modelo)
     const user = await User.create({
       username,
       email,
       password
     });
 
-    // Generar token
+    // ========================================================================================
+    // GENERACIÓN DE TOKEN JWT
+    // ========================================================================================
+    // Crear token de autenticación para sesión inmediata
     const token = generateToken({ id: user.id, role: user.role });
 
-    // Devolver usuario (sin password) y token
+    // ========================================================================================
+    // RESPUESTA SEGURA
+    // ========================================================================================
+    // Devolver datos del usuario (excluyendo password) y token
     const userData = {
       id: user.id,
       username: user.username,
@@ -47,32 +85,46 @@ const register = async (req, res) => {
   }
 };
 
-// Login de usuario
+// ============================================================================================
+// LOGIN DE USUARIO
+// ============================================================================================
+// Endpoint: POST /api/auth/login
+// Función: Autenticar usuario existente y crear sesión
+// Validaciones: Credenciales válidas, cuenta activa
 const login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
+    // ========================================================================================
+    // BÚSQUEDA Y VALIDACIÓN DEL USUARIO
+    // ========================================================================================
     // Buscar usuario por email
     const user = await User.findOne({ where: { email } });
     if (!user) {
       return res.status(401).json({ error: 'Credenciales inválidas' });
     }
 
-    // Verificar si usuario está activo
+    // Verificar si la cuenta está activa
     if (!user.isActive) {
       return res.status(403).json({ error: 'Cuenta de usuario desactivada' });
     }
 
-    // Verificar contraseña
+    // ========================================================================================
+    // VERIFICACIÓN DE CONTRASEÑA
+    // ========================================================================================
+    // Usar método del modelo para verificar password hasheado
     const isPasswordValid = await user.validatePassword(password);
     if (!isPasswordValid) {
       return res.status(401).json({ error: 'Credenciales inválidas' });
     }
 
-    // Generar token
+    // ========================================================================================
+    // GENERACIÓN DE TOKEN Y RESPUESTA
+    // ========================================================================================
+    // Generar token JWT para la sesión
     const token = generateToken({ id: user.id, role: user.role });
 
-    // Devolver usuario (sin password) y token
+    // Preparar datos del usuario (sin información sensible)
     const userData = {
       id: user.id,
       username: user.username,
@@ -89,10 +141,18 @@ const login = async (req, res) => {
   }
 };
 
-// Obtener perfil de usuario autenticado
+// ============================================================================================
+// OBTENER PERFIL DE USUARIO AUTENTICADO
+// ============================================================================================
+// Endpoint: GET /api/auth/profile
+// Función: Recuperar información del usuario actual (requiere autenticación)
+// Middleware: Requiere token JWT válido
 const getProfile = async (req, res) => {
   try {
-    // Usuario ya está en req.user gracias al middleware de autenticación
+    // ========================================================================================
+    // ACCESO A USUARIO AUTENTICADO
+    // ========================================================================================
+    // El usuario ya está disponible en req.user gracias al middleware de autenticación
     const userData = {
       id: req.user.id,
       username: req.user.username,
@@ -109,18 +169,26 @@ const getProfile = async (req, res) => {
   }
 };
 
-// Actualizar perfil de usuario
+// ============================================================================================
+// ACTUALIZAR PERFIL DE USUARIO
+// ============================================================================================
+// Endpoint: PUT /api/auth/profile
+// Función: Actualizar información básica del usuario (username, email)
+// Validaciones: Username y email únicos en el sistema
 const updateProfile = async (req, res) => {
   try {
     const { username, email } = req.body;
     const userId = req.user.id;
 
-    // Verificar si el nuevo username o email ya están en uso por otro usuario
+    // ========================================================================================
+    // VALIDACIÓN DE UNICIDAD DE DATOS
+    // ========================================================================================
+    // Verificar que el nuevo username no esté en uso por otro usuario
     if (username && username !== req.user.username) {
       const existingUser = await User.findOne({ 
         where: { 
           username,
-          id: { [Op.ne]: userId }
+          id: { [Op.ne]: userId } // Excluir al usuario actual
         }
       });
       if (existingUser) {
@@ -128,11 +196,12 @@ const updateProfile = async (req, res) => {
       }
     }
 
+    // Verificar que el nuevo email no esté en uso por otro usuario
     if (email && email !== req.user.email) {
       const existingUser = await User.findOne({ 
         where: { 
           email,
-          id: { [Op.ne]: userId }
+          id: { [Op.ne]: userId } // Excluir al usuario actual
         }
       });
       if (existingUser) {
@@ -140,13 +209,16 @@ const updateProfile = async (req, res) => {
       }
     }
 
-    // Actualizar usuario
+    // ========================================================================================
+    // ACTUALIZACIÓN Y RESPUESTA
+    // ========================================================================================
+    // Actualizar datos en la base de datos
     await User.update(
       { username, email },
       { where: { id: userId } }
     );
 
-    // Obtener usuario actualizado
+    // Obtener usuario actualizado para respuesta
     const updatedUser = await User.findByPk(userId);
     const userData = {
       id: updatedUser.id,
@@ -167,13 +239,21 @@ const updateProfile = async (req, res) => {
   }
 };
 
-// Cambiar contraseña
+// ============================================================================================
+// CAMBIAR CONTRASEÑA
+// ============================================================================================
+// Endpoint: PUT /api/auth/change-password
+// Función: Actualizar contraseña del usuario (requiere contraseña actual)
+// Seguridad: Verificación de contraseña actual antes de permitir cambio
 const changePassword = async (req, res) => {
   try {
     const { currentPassword, newPassword } = req.body;
     const userId = req.user.id;
 
-    // Verificar contraseña actual
+    // ========================================================================================
+    // VERIFICACIÓN DE CONTRASEÑA ACTUAL
+    // ========================================================================================
+    // Obtener usuario y verificar contraseña actual
     const user = await User.findByPk(userId);
     const isCurrentPasswordValid = await user.validatePassword(currentPassword);
     
@@ -181,7 +261,10 @@ const changePassword = async (req, res) => {
       return res.status(400).json({ error: 'Current password is incorrect' });
     }
 
-    // Actualizar contraseña
+    // ========================================================================================
+    // ACTUALIZACIÓN DE CONTRASEÑA
+    // ========================================================================================
+    // Actualizar contraseña (se hashea automáticamente en el modelo)
     user.password = newPassword;
     await user.save();
 
@@ -192,12 +275,20 @@ const changePassword = async (req, res) => {
   }
 };
 
-// Eliminar cuenta
+// ============================================================================================
+// ELIMINAR CUENTA DE USUARIO
+// ============================================================================================
+// Endpoint: DELETE /api/auth/account
+// Función: Eliminar completamente la cuenta del usuario
+// Efecto: Elimina usuario y todos sus datos relacionados (cascada)
 const deleteAccount = async (req, res) => {
   try {
     const userId = req.user.id;
 
-    // Eliminar usuario (esto también eliminará registros relacionados por las foreign keys)
+    // ========================================================================================
+    // ELIMINACIÓN EN CASCADA
+    // ========================================================================================
+    // Eliminar usuario (las foreign keys con CASCADE eliminarán datos relacionados)
     await User.destroy({ where: { id: userId } });
 
     return res.status(200).json({ message: 'Account deleted successfully' });
@@ -207,11 +298,14 @@ const deleteAccount = async (req, res) => {
   }
 };
 
+// ============================================================================================
+// EXPORTACIÓN DE FUNCIONES
+// ============================================================================================
 module.exports = {
-  register,
-  login,
-  getProfile,
-  updateProfile,
-  changePassword,
-  deleteAccount
+  register,        // Registro de nuevos usuarios
+  login,          // Autenticación de usuarios
+  getProfile,     // Obtener perfil actual
+  updateProfile,  // Actualizar perfil
+  changePassword, // Cambiar contraseña
+  deleteAccount   // Eliminar cuenta
 }; 

@@ -1,6 +1,35 @@
 const { Trade, Chat, Market, User, Card } = require('../models');
 const { Op } = require('sequelize');
 
+// ================================================================================================
+// CONTROLADOR DE INTERCAMBIOS - TRADE CONTROLLER
+// ================================================================================================
+// Este controlador maneja todas las operaciones del sistema de trading de cartas:
+// 1. Iniciación de propuestas de intercambio
+// 2. Aceptación y rechazo de trades
+// 3. Transferencia automática de propiedad
+// 4. Limpieza de recursos después de trades
+// 
+// CARACTERÍSTICAS PRINCIPALES:
+// - Sistema de doble confirmación (buyer + seller)
+// - Transferencia automática de cartas al completar trade
+// - Eliminación automática de chats tras rechazo/completado
+// - Actualización sincronizada de estados de mercado
+// - Logging detallado para auditoría de transacciones
+// ================================================================================================
+
+// ============================================================================================
+// IMPORTACIONES
+// ============================================================================================
+
+// ============================================================================================
+// INICIAR TRADE
+// ============================================================================================
+// Endpoint: POST /api/trades/:chatId/initiate
+// Función: Crear nueva propuesta de intercambio en una conversación
+// Validaciones: Chat válido, sin trades activos, usuario es comprador
+// Restricciones: Solo compradores pueden iniciar, no vendedores
+
 // Iniciar un trade
 const initiateTrade = async (req, res) => {
   try {
@@ -68,6 +97,14 @@ const initiateTrade = async (req, res) => {
     return res.status(500).json({ error: 'Error initiating trade' });
   }
 };
+
+// ============================================================================================
+// ACEPTAR TRADE
+// ============================================================================================
+// Endpoint: PUT /api/trades/:tradeId/accept
+// Función: Confirmar participación en el intercambio
+// Lógica: Sistema de doble confirmación (buyer + seller)
+// Auto-completion: Si ambos aceptan, ejecuta transferencia automática
 
 // Aceptar trade
 const acceptTrade = async (req, res) => {
@@ -146,6 +183,14 @@ const acceptTrade = async (req, res) => {
   }
 };
 
+// ============================================================================================
+// RECHAZAR TRADE
+// ============================================================================================
+// Endpoint: PUT /api/trades/:tradeId/reject
+// Función: Cancelar propuesta de intercambio
+// Efectos: Actualiza estado a rechazado y elimina chat completo
+// Limpieza: Destrucción en cascada de mensajes y relaciones
+
 // Rechazar trade
 const rejectTrade = async (req, res) => {
   try {
@@ -200,6 +245,17 @@ const rejectTrade = async (req, res) => {
     return res.status(500).json({ error: 'Error rejecting trade' });
   }
 };
+
+// ============================================================================================
+// COMPLETAR TRADE (FUNCIÓN AUXILIAR)
+// ============================================================================================
+// Función interna: Ejecutar transferencia de propiedad de carta
+// Operaciones: 
+//   1. Transferir carta de vendedor a comprador
+//   2. Actualizar estado de listado a "sold"
+//   3. Limpiar precio y estado de listado
+//   4. Eliminar chat y mensajes relacionados
+// Logging: Registro detallado para auditoría de transacciones
 
 // Función auxiliar para completar el trade
 const completeTrade = async (trade) => {
@@ -283,6 +339,14 @@ const completeTrade = async (trade) => {
     throw error;
   }
 };
+
+// ============================================================================================
+// OBTENER TRADE ACTIVO DE CHAT
+// ============================================================================================
+// Endpoint: GET /api/trades/:chatId
+// Función: Recuperar información de trade activo en una conversación
+// Estados válidos: pending, buyer_accepted, seller_accepted, both_accepted
+// Includes: Datos de comprador, vendedor, mercado y carta
 
 // Obtener trade activo de un chat
 const getChatTrade = async (req, res) => {

@@ -1,6 +1,36 @@
 const { Market, Card, User, Chat } = require('../models');
 const { sequelize } = require('../config/database');
 
+// ================================================================================================
+// CONTROLADOR DE MERCADO - MARKET CONTROLLER
+// ================================================================================================
+// Este controlador maneja todas las operaciones del marketplace de cartas:
+// 1. Listado de cartas en el mercado
+// 2. Consulta y búsqueda de listados
+// 3. Gestión de listados del usuario
+// 4. Actualización de estado de listados
+// 5. Eliminación y remoción de cartas del mercado
+// 
+// CARACTERÍSTICAS PRINCIPALES:
+// - Gestión completa del ciclo de vida de listados
+// - Paginación y filtrado de resultados
+// - Prevención de listados duplicados
+// - Sincronización entre estado de carta y listado
+// - Transacciones para consistencia de datos
+// ================================================================================================
+
+// ============================================================================================
+// IMPORTACIONES
+// ============================================================================================
+
+// ============================================================================================
+// LISTAR CARTA EN EL MERCADO
+// ============================================================================================
+// Endpoint: POST /api/market/list
+// Función: Crear un nuevo listado de una carta en el marketplace
+// Validaciones: Carta del usuario, sin listados activos duplicados
+// Características: Reutilización de listados inactivos previos
+
 // Listar una carta en el mercado
 const listCard = async (req, res) => {
   try {
@@ -71,6 +101,14 @@ const listCard = async (req, res) => {
   }
 };
 
+// ============================================================================================
+// OBTENER TODOS LOS LISTADOS DEL MERCADO
+// ============================================================================================
+// Endpoint: GET /api/market/listings
+// Función: Recuperar listados disponibles con paginación y filtros
+// Parámetros: status, sortBy, order, page, limit
+// Includes: Datos de carta y vendedor para vista completa
+
 // Obtener todos los listados del mercado
 const getListings = async (req, res) => {
   try {
@@ -132,6 +170,13 @@ const getListings = async (req, res) => {
   }
 };
 
+// ============================================================================================
+// OBTENER DETALLE DE UN LISTADO
+// ============================================================================================
+// Endpoint: GET /api/market/listings/:id
+// Función: Recuperar información completa de un listado específico
+// Includes: Detalles de carta, vendedor y descripción completa
+
 // Obtener detalle de un listado
 const getListingById = async (req, res) => {
   try {
@@ -162,6 +207,13 @@ const getListingById = async (req, res) => {
   }
 };
 
+// ============================================================================================
+// OBTENER LISTADOS DEL USUARIO
+// ============================================================================================
+// Endpoint: GET /api/market/my-listings
+// Función: Recuperar todos los listados creados por el usuario autenticado
+// Ordenamiento: Por fecha de creación descendente
+
 // Obtener listados del usuario
 const getUserListings = async (req, res) => {
   try {
@@ -186,6 +238,14 @@ const getUserListings = async (req, res) => {
     return res.status(500).json({ error: 'Error al obtener los listados del usuario' });
   }
 };
+
+// ============================================================================================
+// ACTUALIZAR LISTADO
+// ============================================================================================
+// Endpoint: PUT /api/market/listings/:id
+// Función: Modificar precio, descripción o estado de un listado
+// Transacciones: Sincronización automática con estado de carta
+// Validación: Solo el propietario puede actualizar
 
 // Actualizar un listado
 const updateListing = async (req, res) => {
@@ -239,6 +299,13 @@ const updateListing = async (req, res) => {
   }
 };
 
+// ============================================================================================
+// ELIMINAR LISTADO
+// ============================================================================================
+// Endpoint: DELETE /api/market/listings/:id
+// Función: Eliminar listado del mercado y actualizar estado de carta
+// Transacciones: Garantiza consistencia entre Market y Card
+
 // Eliminar un listado
 const deleteListing = async (req, res) => {
   try {
@@ -275,6 +342,14 @@ const deleteListing = async (req, res) => {
     return res.status(500).json({ error: 'Error al eliminar el listado' });
   }
 };
+
+// ============================================================================================
+// REMOVER CARTA DEL MERCADO POR CARD ID
+// ============================================================================================
+// Endpoint: DELETE /api/market/unlist/:cardId
+// Función: Remover carta del mercado usando ID de carta (más conveniente para frontend)
+// Casos especiales: Manejo de estados inconsistentes, listados sin registro
+// Transacciones: Limpieza completa de estados relacionados
 
 // Eliminar un listado por cardId (más conveniente para el frontend)
 const unlistCardByCardId = async (req, res) => {

@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CardService } from '../../services/card.service';
 import { MarketService } from '../../services/market.service'; 
+import { ModalService } from '../../services/modal.service';
 import { Card } from '../../models/card';
 import { CardFormComponent } from '../../components/card-form/card-form.component';
 import { environment } from '../../../environments/environment';
@@ -209,7 +210,8 @@ export class MyCardsComponent implements OnInit {
   
   constructor(
     private cardService: CardService,
-    private marketService: MarketService
+    private marketService: MarketService,
+    private modalService: ModalService
   ) {}
   
   ngOnInit(): void {
@@ -354,13 +356,13 @@ export class MyCardsComponent implements OnInit {
           },
           error: (error) => {
             console.error('Error listing card on market', error);
-            alert('Ha ocurrido un error al listar la carta en el mercado. Por favor, inténtalo de nuevo.');
+            this.modalService.showError('An error occurred while listing the card on the market. Please try again.');
           }
         });
       },
       error: (error) => {
         console.error('Error updating card', error);
-        alert('Ha ocurrido un error al actualizar la carta. Por favor, inténtalo de nuevo.');
+        this.modalService.showError('An error occurred while updating the card. Please try again.');
       }
     });
   }
@@ -395,7 +397,7 @@ export class MyCardsComponent implements OnInit {
         },
         error: (error) => {
           console.error('Error updating card', error);
-          alert('Ha ocurrido un error al actualizar la carta. Por favor, inténtalo de nuevo.');
+          this.modalService.showError('An error occurred while updating the card. Please try again.');
         }
       });
     } else {
@@ -408,35 +410,54 @@ export class MyCardsComponent implements OnInit {
         },
         error: (error) => {
           console.error('Error creating card', error);
-          alert('Ha ocurrido un error al crear la carta. Por favor, inténtalo de nuevo.');
+          this.modalService.showError('An error occurred while creating the card. Please try again.');
         }
       });
     }
   }
   
-  deleteCard(id: number): void {
-    if (confirm('¿Estás seguro de que quieres eliminar esta carta?')) {
+  async deleteCard(id: number): Promise<void> {
+    const confirmed = await this.modalService.showConfirm(
+      'Are you sure you want to delete this card?',
+      'Confirm Deletion',
+      'Delete',
+      'Cancel'
+    );
+    
+    if (confirmed) {
       this.cardService.deleteCard(id).subscribe({
         next: () => {
           this.cards = this.cards.filter(card => card.id !== id);
           this.extractEditions();
           this.applyFilters();
+          this.modalService.showSuccess('Card deleted successfully.');
         },
-        error: (error) => console.error('Error deleting card', error)
+        error: (error) => {
+          console.error('Error deleting card', error);
+          this.modalService.showError('An error occurred while deleting the card. Please try again.');
+        }
       });
     }
   }
 
-  removeFromMarket(card: Card): void {
-    if (confirm('¿Estás seguro de que quieres remover esta carta del mercado?')) {
+  async removeFromMarket(card: Card): Promise<void> {
+    const confirmed = await this.modalService.showConfirm(
+      'Are you sure you want to remove this card from the market?',
+      'Confirm Removal',
+      'Remove',
+      'Cancel'
+    );
+    
+    if (confirmed) {
       this.marketService.unlistCard(card.id!).subscribe({
         next: () => {
-          // Recargar las cartas para obtener el estado actualizado
+          // Reload cards to get updated status
           this.loadCards();
+          this.modalService.showSuccess('Card removed from market successfully.');
         },
         error: (error: any) => {
           console.error('Error removing card from market', error);
-          alert('Ha ocurrido un error al remover la carta del mercado. Por favor, inténtalo de nuevo.');
+          this.modalService.showError('An error occurred while removing the card from the market. Please try again.');
         }
       });
     }

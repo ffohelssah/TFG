@@ -1,75 +1,120 @@
+# ================================================================================================
+# DOCKER COMPOSE CONFIGURATION - MAGIC CARDS TRADING APPLICATION
+# ================================================================================================
+# Este archivo define la infraestructura completa de la aplicación usando contenedores Docker.
+# La aplicación consta de 3 servicios principales que trabajan juntos:
+# 1. Frontend (Angular + Nginx)
+# 2. Backend (Node.js + Express)  
+# 3. Base de datos (PostgreSQL)
+# ================================================================================================
+
 version: '3.8'
 
 services:
+  # ============================================================================================
+  # SERVICIO FRONTEND - INTERFAZ DE USUARIO
+  # ============================================================================================
+  # Aplicación Angular compilada y servida por Nginx
+  # Proporciona la interfaz web para los usuarios finales
   frontend:
     build:
-      context: ./frontend
-      dockerfile: Dockerfile
+      context: ./frontend        # Contexto de construcción: carpeta frontend
+      dockerfile: Dockerfile     # Dockerfile específico para el frontend
     ports:
-      - "4200:80"
+      - "4200:80"               # Puerto externo 4200 mapea al puerto interno 80 (Nginx)
     depends_on:
       backend:
-        condition: service_healthy
+        condition: service_healthy  # Espera que el backend esté saludable antes de iniciar
     environment:
-      - NODE_ENV=production
-      - API_URL=http://backend:3000/api
+      - NODE_ENV=production        # Modo de producción
+      - API_URL=http://backend:3000/api  # URL interna para conectar con el backend
     networks:
-      - app-network
-    restart: unless-stopped
+      - app-network               # Red interna para comunicación entre servicios
+    restart: unless-stopped       # Reinicio automático en caso de fallo
 
+  # ============================================================================================
+  # SERVICIO BACKEND - API Y LÓGICA DE NEGOCIO
+  # ============================================================================================
+  # Servidor Node.js con Express que maneja:
+  # - API REST endpoints
+  # - Autenticación y autorización
+  # - Lógica de negocio (cartas, intercambios, chat)
+  # - Comunicación WebSocket para chat en tiempo real
   backend:
     build:
-      context: ./backend
-      dockerfile: Dockerfile
+      context: ./backend          # Contexto de construcción: carpeta backend
+      dockerfile: Dockerfile      # Dockerfile específico para el backend
     ports:
-      - "3000:3000"
+      - "3000:3000"              # Puerto externo 3000 mapea al puerto interno 3000
     volumes:
-      - ./backend:/app
-      - /app/node_modules
-      - ./backend/uploads:/app/uploads
+      - ./backend:/app           # Código fuente mapeado para desarrollo
+      - /app/node_modules        # node_modules independiente del host
+      - ./backend/uploads:/app/uploads  # Carpeta de archivos subidos (imágenes de cartas)
     environment:
-      - NODE_ENV=production
-      - PORT=3000
-      - JWT_SECRET=your_jwt_secret_here
-      - DB_HOST=db
-      - DB_USER=postgres
-      - DB_PASSWORD=postgres
-      - DB_NAME=magic_cards
-      - DB_PORT=5432
+      # Variables de entorno para configuración del servidor
+      - NODE_ENV=production      # Modo de producción
+      - PORT=3000               # Puerto del servidor
+      - JWT_SECRET=your_jwt_secret_here  # Secreto para tokens JWT
+      # Configuración de base de datos
+      - DB_HOST=db              # Host de la BD (nombre del servicio)
+      - DB_USER=postgres        # Usuario de la BD
+      - DB_PASSWORD=postgres    # Contraseña de la BD
+      - DB_NAME=magic_cards     # Nombre de la BD
+      - DB_PORT=5432           # Puerto de la BD
     depends_on:
       db:
-        condition: service_healthy
+        condition: service_healthy  # Espera que la BD esté disponible
     networks:
-      - app-network
+      - app-network              # Red interna para comunicación
     healthcheck:
+      # Verificación de salud del servicio
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/"]
-      interval: 10s
-      timeout: 5s
-      retries: 3
-    restart: unless-stopped
+      interval: 10s              # Verificar cada 10 segundos
+      timeout: 5s               # Timeout de 5 segundos
+      retries: 3                # 3 intentos antes de marcar como no saludable
+    restart: unless-stopped      # Reinicio automático
 
+  # ============================================================================================
+  # SERVICIO BASE DE DATOS - PERSISTENCIA
+  # ============================================================================================
+  # PostgreSQL para almacenar toda la información:
+  # - Usuarios y autenticación
+  # - Catálogo de cartas
+  # - Transacciones e intercambios
+  # - Mensajes de chat
+  # - Listados del mercado
   db:
-    image: postgres:14-alpine
+    image: postgres:14-alpine    # Imagen oficial de PostgreSQL (versión ligera)
     ports:
-      - "5432:5432"
+      - "5432:5432"            # Puerto estándar de PostgreSQL
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql/data  # Volumen persistente para datos
     environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
-      - POSTGRES_DB=magic_cards
+      # Configuración inicial de PostgreSQL
+      - POSTGRES_USER=postgres    # Usuario administrador
+      - POSTGRES_PASSWORD=postgres # Contraseña del administrador
+      - POSTGRES_DB=magic_cards   # Base de datos inicial
     networks:
-      - app-network
+      - app-network              # Red interna
     healthcheck:
+      # Verificación de que PostgreSQL está listo para conexiones
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 10s
       timeout: 5s
       retries: 3
     restart: unless-stopped
 
+# ============================================================================================
+# CONFIGURACIÓN DE RED
+# ============================================================================================
+# Red bridge personalizada para comunicación segura entre servicios
 networks:
   app-network:
     driver: bridge
 
+# ============================================================================================
+# VOLÚMENES PERSISTENTES
+# ============================================================================================
+# Almacenamiento persistente para la base de datos
 volumes:
   postgres_data: 

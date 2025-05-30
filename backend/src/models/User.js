@@ -2,6 +2,35 @@ const { DataTypes } = require('sequelize');
 const bcrypt = require('bcryptjs');
 const { sequelize } = require('../config/database');
 
+// ================================================================================================
+// MODELO DE USUARIO - USER MODEL
+// ================================================================================================
+// Este modelo define la estructura y comportamiento de los usuarios en el sistema.
+// Incluye funcionalidades de seguridad, validaciones y hooks para hashing de contraseñas.
+// 
+// CAMPOS PRINCIPALES:
+// - id: Identificador único auto-incremental
+// - username: Nombre de usuario único (3-30 caracteres)
+// - email: Correo electrónico único y válido
+// - password: Contraseña hasheada automáticamente
+// - profilePicture: URL de imagen de perfil (opcional)
+// - isActive: Estado activo del usuario (por defecto true)
+// - role: Rol del usuario (user/admin, por defecto user)
+// 
+// CARACTERÍSTICAS DE SEGURIDAD:
+// - Hash automático de contraseñas con bcrypt y salt
+// - Validaciones de longitud y formato
+// - Método para verificación de contraseñas
+// ================================================================================================
+
+// ============================================================================================
+// IMPORTACIONES
+// ============================================================================================
+
+// ============================================================================================
+// DEFINICIÓN DEL MODELO
+// ============================================================================================
+// Sequelize model con validaciones, hooks y configuración de timestamps
 const User = sequelize.define('User', {
   id: {
     type: DataTypes.INTEGER,
@@ -58,7 +87,11 @@ const User = sequelize.define('User', {
   }
 });
 
-// Método para validar contraseña
+// ============================================================================================
+// MÉTODO DE VALIDACIÓN DE CONTRASEÑAS
+// ============================================================================================
+// Método de instancia para verificar contraseñas usando bcrypt
+// Compara contraseña en texto plano con hash almacenado
 User.prototype.validatePassword = async function(password) {
   return await bcrypt.compare(password, this.password);
 };
