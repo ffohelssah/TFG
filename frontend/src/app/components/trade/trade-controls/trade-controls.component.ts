@@ -429,4 +429,4 @@ export class TradeControlsComponent implements OnInit, OnDestroy {
     
     return `http://localhost:3000${imageUrl}`;
   }
-}
+} 
