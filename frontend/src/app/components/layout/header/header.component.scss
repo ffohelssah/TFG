@@ -16,63 +16,248 @@
   }
 }
 
-/* Desactivar transiciones en navegación para evitar cambios de color */
+/* Estilos mejorados para navegación con hover funcional */
 :host ::ng-deep {
-  .nav-item {
-    transition: none !important;
-    color: #6B7280 !important; /* Valor exacto de text-gray-500 */
-    
-    &:hover {
-      color: #3b82f6 !important; /* blue-500 */
-    }
-    
-    &.text-blue-600 {
-      color: #2563eb !important; /* Valor exacto de text-blue-600 */
-    }
-  }
-  
-  /* Clase para mantener el color del texto fijo independientemente del modo */
+  .nav-item,
   .nav-fixed-color {
-    transition: none !important;
-    color: #6B7280 !important; /* Valor exacto de text-gray-500 */
+    color: #6B7280 !important; /* text-gray-500 */
+    transition: color 0.2s ease-in-out !important;
     
     &:hover {
-      color: #3b82f6 !important; /* blue-500 */
+      color: #3B82F6 !important; /* blue-500 */
     }
     
-    &.text-blue-600 {
-      color: #2563eb !important; /* Valor exacto de text-blue-600 */
+    &.text-blue-600,
+    &[class*="text-blue-600"] {
+      color: #2563EB !important; /* text-blue-600 */
+      
+      &:hover {
+        color: #1D4ED8 !important; /* blue-700 para hover más oscuro */
+      }
     }
   }
   
-  /* Aplicar los colores consistentemente en modo oscuro y claro */
-  &:host-context(.dark) .nav-item,
-  &:host-context(body.dark) .nav-item,
-  &:host-context(:root.dark) .nav-item,
-  &:host-context(.dark) .nav-fixed-color,
-  &:host-context(body.dark) .nav-fixed-color,
-  &:host-context(:root.dark) .nav-fixed-color {
+  /* Estilos específicos para navegación móvil con hover de fondo */
+  .md\\:hidden .nav-item,
+  .md\\:hidden .nav-fixed-color {
+    transition: all 0.2s ease-in-out !important;
+    
+    &:hover {
+      background-color: #EFF6FF !important; /* blue-50 */
+      color: #3B82F6 !important; /* blue-500 */
+    }
+    
+    &.text-blue-600,
+    &[class*="text-blue-600"] {
+      &:hover {
+        background-color: #DBEAFE !important; /* blue-100 */
+        color: #1D4ED8 !important; /* blue-700 */
+      }
+    }
+  }
+  
+  /* Asegurar que funcione en modo oscuro también */
+  .dark .nav-item,
+  .dark .nav-fixed-color,
+  body.dark .nav-item,
+  body.dark .nav-fixed-color {
     color: #6B7280 !important;
     
     &:hover {
-      color: #3b82f6 !important;
+      color: #3B82F6 !important;
     }
     
-    &.text-blue-600 {
-      color: #2563eb !important;
+    &.text-blue-600,
+    &[class*="text-blue-600"] {
+      color: #2563EB !important;
+      
+      &:hover {
+        color: #1D4ED8 !important;
+      }
     }
   }
   
-  /* Asegurar que los enlaces estándar tengan el color correcto */
-  .text-gray-500 {
-    color: #6B7280 !important;
-    
+  /* Estilos móviles para modo oscuro */
+  .dark .md\\:hidden .nav-item,
+  .dark .md\\:hidden .nav-fixed-color,
+  body.dark .md\\:hidden .nav-item,
+  body.dark .md\\:hidden .nav-fixed-color {
     &:hover {
-      color: #3b82f6 !important;
+      background-color: #374151 !important; /* gray-700 */
+      color: #3B82F6 !important;
     }
   }
   
-  .text-blue-600 {
-    color: #2563eb !important;
+  /* Estilo específico para el botón de logout y otros botones */
+  button.nav-item,
+  button.nav-fixed-color {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: inherit;
+    font-family: inherit;
+    
+    &:focus {
+      outline: 2px solid #3B82F6;
+      outline-offset: 2px;
+    }
+  }
+  
+  /* Mejorar el hover para enlaces de router */
+  a.nav-item,
+  a.nav-fixed-color {
+    text-decoration: none;
+    
+    &:focus {
+      outline: 2px solid #3B82F6;
+      outline-offset: 2px;
+    }
+  }
+}
+
+/* Estilos para el tooltip del timer de sesión */
+.session-timer-container,
+.session-timer-container-mobile {
+  position: relative;
+}
+
+/* Estilos fijos para el timer de sesión - siempre blanco */
+.session-timer-container,
+.session-timer-container-mobile {
+  color: white !important;
+  
+  * {
+    color: white !important;
+  }
+  
+  svg {
+    color: white !important;
+    stroke: white !important;
+  }
+  
+  span {
+    color: white !important;
+  }
+  
+  /* Color rojo solo cuando hay advertencia */
+  &.text-red-500 {
+    color: #EF4444 !important; /* red-500 */
+    
+    * {
+      color: #EF4444 !important;
+    }
+    
+    svg {
+      color: #EF4444 !important;
+      stroke: #EF4444 !important;
+    }
+    
+    span {
+      color: #EF4444 !important;
+    }
+  }
+}
+
+/* Asegurar que funcione en ambos modos */
+:host ::ng-deep .session-timer-container,
+:host ::ng-deep .session-timer-container-mobile,
+.dark .session-timer-container,
+.dark .session-timer-container-mobile,
+body.dark .session-timer-container,
+body.dark .session-timer-container-mobile {
+  color: white !important;
+  
+  * {
+    color: white !important;
+  }
+  
+  svg {
+    color: white !important;
+    stroke: white !important;
+  }
+  
+  &.text-red-500 {
+    color: #EF4444 !important;
+    
+    * {
+      color: #EF4444 !important;
+    }
+    
+    svg {
+      color: #EF4444 !important;
+      stroke: #EF4444 !important;
+    }
+  }
+}
+
+/* Estilos fijos para el icono de la luna - siempre blanco */
+.theme-toggle-icon {
+  color: white !important;
+  stroke: white !important;
+}
+
+/* Asegurar que el icono de la luna funcione en ambos modos */
+:host ::ng-deep .theme-toggle-icon,
+.dark .theme-toggle-icon,
+body.dark .theme-toggle-icon {
+  color: white !important;
+  stroke: white !important;
+}
+
+.tooltip-container,
+.tooltip-container-mobile {
+  position: fixed;
+  z-index: 9999;
+  pointer-events: none;
+  animation: fadeIn 0.2s ease-in-out;
+  
+  div {
+    background-color: #1F2937; /* gray-900 */
+    color: white;
+    font-size: 0.75rem;
+    border-radius: 0.25rem;
+    padding: 0.25rem 0.5rem;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    white-space: nowrap;
+    position: relative;
+  }
+  
+  .tooltip-arrow {
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 0;
+    border-left: 4px solid transparent;
+    border-right: 4px solid transparent;
+    border-top: 4px solid #1F2937; /* gray-900 */
+  }
+}
+
+/* Soporte para modo oscuro en el tooltip */
+:host ::ng-deep .dark .tooltip-container,
+:host ::ng-deep .dark .tooltip-container-mobile,
+body.dark .tooltip-container,
+body.dark .tooltip-container-mobile {
+  div {
+    background-color: #374151; /* gray-700 para modo oscuro */
+    color: white;
+    border: 1px solid #4B5563; /* gray-600 */
+  }
+  
+  .tooltip-arrow {
+    border-top-color: #374151; /* gray-700 */
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 } 

@@ -11,7 +11,51 @@
       
       @if (authService.isLoggedIn()) {
         <a routerLink="/my-cards" routerLinkActive="text-blue-600 font-medium" class="text-gray-500 hover:text-blue-500 nav-fixed-color nav-item">My Cards</a>
-        <a routerLink="/chat" routerLinkActive="text-blue-600 font-medium" class="text-gray-500 hover:text-blue-500 nav-fixed-color nav-item">Messages</a>
+        <a routerLink="/profile" routerLinkActive="text-blue-600 font-medium" class="text-gray-500 hover:text-blue-500 nav-fixed-color nav-item">Profile</a>
+        <div class="relative">
+          <a routerLink="/chat" routerLinkActive="text-blue-600 font-medium" class="text-gray-500 hover:text-blue-500 nav-fixed-color nav-item">Messages</a>
+          @if ((unreadMessagesCount$ | async) && (unreadMessagesCount$ | async)! > 0) {
+            <span class="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+              !
+            </span>
+          }
+        </div>
+
+        <!-- Session Timer -->
+        <div class="flex items-center space-x-2">
+          @if (sessionTimeRemaining > 0) {
+            <div class="relative">
+              <span 
+                class="text-sm font-mono cursor-help"
+                [class]="showSessionWarning ? 'text-red-500 animate-pulse' : 'text-white'"
+                (mouseenter)="showTooltip = true" 
+                (mouseleave)="showTooltip = false"
+                (mousemove)="onMouseMove($event)"
+                title="Session time remaining">
+                {{ formatTimeRemaining(sessionTimeRemaining) }}
+              </span>
+              
+              <!-- Tooltip -->
+              @if (showTooltip) {
+                <div 
+                  class="fixed z-50 px-2 py-1 text-xs text-white bg-gray-800 rounded shadow-lg pointer-events-none"
+                  [style.left.px]="tooltipX"
+                  [style.top.px]="tooltipY">
+                  Session time remaining
+                </div>
+              }
+              
+              @if (showSessionWarning) {
+                <button 
+                  (click)="extendSession()"
+                  class="ml-2 text-xs bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded transition-colors">
+                  Extend
+                </button>
+              }
+            </div>
+          }
+        </div>
+
         <button (click)="logout()" class="text-gray-500 hover:text-blue-500 nav-fixed-color nav-item">Logout</button>
       } @else {
         <a routerLink="/login" routerLinkActive="text-blue-600 font-medium" class="text-gray-500 hover:text-blue-500 nav-fixed-color nav-item">Login</a>
@@ -25,7 +69,7 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
           </svg>
         } @else {
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
           </svg>
         }
@@ -34,6 +78,26 @@
 
     <!-- Mobile Menu Button and Theme Toggle-->
     <div class="md:hidden flex items-center">
+      <!-- Session Timer Mobile -->
+      @if (authService.isLoggedIn() && sessionTimeRemaining > 0) {
+        <div class="mr-2 relative">
+          <span 
+            class="text-sm font-mono cursor-help"
+            [class]="showSessionWarning ? 'text-red-500 animate-pulse' : 'text-white'"
+            (click)="showTooltipMobile = !showTooltipMobile"
+            title="Session time remaining">
+            {{ formatTimeRemaining(sessionTimeRemaining) }}
+          </span>
+          
+          <!-- Tooltip Mobile -->
+          @if (showTooltipMobile) {
+            <div class="absolute top-8 right-0 z-50 px-2 py-1 text-xs text-white bg-gray-800 rounded shadow-lg">
+              Session time remaining
+            </div>
+          }
+        </div>
+      }
+
       <!-- Theme Toggle Button for Mobile -->
       <button (click)="toggleTheme()" class="mr-2 p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 focus:outline-none" aria-label="Toggle Dark Mode">
         @if (isDarkMode) {
@@ -41,7 +105,7 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
           </svg>
         } @else {
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
           </svg>
         }
@@ -73,10 +137,43 @@
           class="block px-3 py-2 rounded-md text-base font-medium text-gray-500 hover:bg-blue-50 hover:text-blue-500 nav-fixed-color nav-item">
           My Cards
         </a>
-        <a routerLink="/chat" routerLinkActive="bg-blue-100 text-blue-600 font-medium" 
+        <a routerLink="/profile" routerLinkActive="bg-blue-100 text-blue-600 font-medium" 
           class="block px-3 py-2 rounded-md text-base font-medium text-gray-500 hover:bg-blue-50 hover:text-blue-500 nav-fixed-color nav-item">
-          Messages
+          Profile
         </a>
+        <div class="relative">
+          <a routerLink="/chat" routerLinkActive="bg-blue-100 text-blue-600 font-medium" 
+            class="block px-3 py-2 rounded-md text-base font-medium text-gray-500 hover:bg-blue-50 hover:text-blue-500 nav-fixed-color nav-item">
+            Messages
+          </a>
+          @if ((unreadMessagesCount$ | async) && (unreadMessagesCount$ | async)! > 0) {
+            <span class="absolute top-2 right-3 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+              !
+            </span>
+          }
+        </div>
+
+        <!-- Session Timer Mobile Menu -->
+        @if (sessionTimeRemaining > 0) {
+          <div class="px-3 py-2 flex items-center justify-between">
+            <span class="text-sm text-gray-500">Session:</span>
+            <div class="flex items-center space-x-2">
+              <span 
+                class="text-sm font-mono"
+                [class]="showSessionWarning ? 'text-red-500 animate-pulse' : 'text-white'">
+                {{ formatTimeRemaining(sessionTimeRemaining) }}
+              </span>
+              @if (showSessionWarning) {
+                <button 
+                  (click)="extendSession()"
+                  class="text-xs bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded">
+                  Extend
+                </button>
+              }
+            </div>
+          </div>
+        }
+
         <button (click)="logout()" 
           class="w-full text-left block px-3 py-2 rounded-md text-base font-medium text-gray-500 hover:bg-blue-50 hover:text-blue-500 nav-fixed-color nav-item">
           Logout

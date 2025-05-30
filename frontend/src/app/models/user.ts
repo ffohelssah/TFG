@@ -3,14 +3,12 @@ export interface User {
   username: string;
   email: string;
   password?: string;
-  profilePicture?: string;
-  isActive?: boolean;
-  role?: 'user' | 'admin';
+  role?: string;
   createdAt?: Date;
   updatedAt?: Date;
 }
 
 export interface AuthResponse {
-  user: User;
   token: string;
+  user: User;
 } 

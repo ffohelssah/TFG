@@ -1,8 +1,10 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
+import { RouterLink, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { MarketService } from '../../services/market.service';
+import { ChatService } from '../../services/chat.service';
+import { AuthService } from '../../services/auth.service';
 import { Market } from '../../models/market';
 import { environment } from '../../../environments/environment';
 
@@ -97,7 +99,34 @@ import { environment } from '../../../environments/environment';
                 <span class="text-sm text-gray-500 fixed-text-color">Seller: {{ listing.seller?.username }}</span>
               </div>
               <div class="mt-4 flex justify-end space-x-2">
-                <button class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm">Buy</button>
+                <button 
+                  *ngIf="listing.status === 'available' && currentUser && currentUser.id !== listing.seller?.id"
+                  (click)="contactSeller(listing)"
+                  class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm"
+                >
+                  Buy
+                </button>
+                <button 
+                  *ngIf="listing.status !== 'available'"
+                  disabled
+                  class="bg-gray-400 text-white px-4 py-2 rounded-md text-sm opacity-50 cursor-not-allowed"
+                >
+                  Not Available
+                </button>
+                <button 
+                  *ngIf="!currentUser"
+                  (click)="navigateToLogin()"
+                  class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm"
+                >
+                  Login to Buy
+                </button>
+                <button 
+                  *ngIf="currentUser && currentUser.id === listing.seller?.id"
+                  disabled
+                  class="bg-gray-400 text-white px-4 py-2 rounded-md text-sm opacity-50 cursor-not-allowed"
+                >
+                  Your Card
+                </button>
               </div>
             </div>
           </div>
@@ -141,6 +170,7 @@ export class MarketComponent implements OnInit {
   editions: string[] = [];
   loading = true;
   baseApiUrl = environment.apiUrl.replace('/api', '');
+  currentUser: any = null;
   
   // Filtros
   searchTerm = '';
@@ -156,9 +186,18 @@ export class MarketComponent implements OnInit {
     totalPages: number;
   } | null = null;
   
-  constructor(private marketService: MarketService) {}
+  constructor(
+    private marketService: MarketService,
+    private chatService: ChatService,
+    private authService: AuthService,
+    private router: Router
+  ) {}
   
   ngOnInit(): void {
+    this.authService.currentUser$.subscribe(user => {
+      this.currentUser = user;
+    });
+    
     this.loadListings();
   }
   
@@ -246,5 +285,31 @@ export class MarketComponent implements OnInit {
       return;
     }
     this.loadListings(page);
+  }
+
+  contactSeller(listing: Market): void {
+    if (!listing || !this.currentUser || !listing.id || !listing.seller?.id) {
+      console.error('Cannot start chat: Missing required information');
+      return;
+    }
+
+    this.chatService.createChat(listing.id, listing.seller.id).subscribe({
+      next: (response) => {
+        if (response.chat && response.chat.id) {
+          this.router.navigate(['/chat', response.chat.id]);
+        } else {
+          console.error('Invalid chat response:', response);
+          alert('Error starting conversation: Invalid response from server');
+        }
+      },
+      error: (error) => {
+        console.error('Error creating chat:', error);
+        alert('Error starting conversation. Please try again later.');
+      }
+    });
+  }
+
+  navigateToLogin(): void {
+    this.router.navigate(['/login'], { queryParams: { returnUrl: this.router.url } });
   }
 } 

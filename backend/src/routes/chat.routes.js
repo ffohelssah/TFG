@@ -15,12 +15,18 @@ router.post('/', chatValidators.create, validate, chatController.createChat);
 router.get('/', chatController.getUserChats);
 
 // Ruta para obtener mensajes de un chat
-router.get('/:chatId', chatValidators.getMessages, validate, chatController.getChatMessages);
+router.get('/:chatId/messages', chatValidators.getMessages, validate, chatController.getChatMessages);
 
 // Ruta para enviar un mensaje
 router.post('/:chatId/messages', chatValidators.sendMessage, validate, chatController.sendMessage);
 
 // Ruta para marcar mensajes como leídos
 router.put('/:chatId/read', chatValidators.markAsRead, validate, chatController.markAsRead);
+
+// Ruta para obtener conteo de mensajes no leídos
+router.get('/unread/counts', chatController.getUnreadCounts);
+
+// Ruta para limpiar chats huérfanos (admin/debugging)
+router.delete('/cleanup/orphaned', chatController.cleanupOrphanedChats);
 
 module.exports = router; 

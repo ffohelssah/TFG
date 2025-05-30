@@ -1,22 +1,30 @@
-FROM node:18-alpine
+FROM node:18-bullseye
+
+# Install essential build tools
+RUN apt-get update && apt-get install -y \
+    python3 \
+    make \
+    g++ \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
 # Copy package.json and package-lock.json
 COPY package*.json ./
 
-# Install dependencies with force flag to ensure Angular dependencies are installed correctly
-RUN npm install --force && \
-    npm install @angular/animations@^19.2.0 --save --force
+# Clear npm cache and install dependencies
+RUN npm cache clean --force
+RUN npm install --legacy-peer-deps
 
-# Copy PostCSS configuration
-COPY .postcssrc.json ./
+# Install the specific rollup native module that's missing
+RUN npm install @rollup/rollup-linux-x64-gnu --save-optional || true
 
-# Create empty directories for volume mounts
-RUN mkdir -p src
+# Copy the rest of the application
+COPY . .
 
 # Expose port for development server
 EXPOSE 4200
 
-# Start development server with host 0.0.0.0 to be accessible outside container
-CMD ["npm", "run", "start:debug", "--", "--host", "0.0.0.0", "--poll", "500"]
+# Start development server with specific flags to avoid Rollup issues
+CMD ["npm", "run", "start", "--", "--host", "0.0.0.0", "--poll", "500", "--disable-host-check", "--live-reload=false"]

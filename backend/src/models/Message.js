@@ -41,11 +41,6 @@ const Message = sequelize.define('Message', {
   timestamps: true
 });
 
-// Establecer relaciones
-Message.belongsTo(Chat, { foreignKey: 'chatId' });
-Message.belongsTo(User, { as: 'sender', foreignKey: 'senderId' });
-
-Chat.hasMany(Message, { foreignKey: 'chatId' });
-User.hasMany(Message, { as: 'sentMessages', foreignKey: 'senderId' });
+// Relaciones definidas en models/index.js
 
 module.exports = Message; 

@@ -1,15 +1,18 @@
-FROM node:16-slim
+FROM node:18-alpine
 
 WORKDIR /app
 
+# Copy package files
 COPY package*.json ./
 
-# Instalar dependencias
+# Install dependencies
 RUN npm install
 
+# Copy the rest of the application
 COPY . .
 
-RUN mkdir -p uploads
+# Create uploads directory
+RUN mkdir -p uploads && chmod 777 uploads
 
 EXPOSE 3000
 

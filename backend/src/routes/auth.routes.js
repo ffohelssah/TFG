@@ -14,4 +14,13 @@ router.post('/login', authValidators.login, validate, authController.login);
 // Ruta para obtener perfil de usuario autenticado
 router.get('/profile', authenticate, authController.getProfile);
 
+// Ruta para actualizar perfil de usuario
+router.put('/profile', authenticate, authController.updateProfile);
+
+// Ruta para cambiar contraseña
+router.put('/password', authenticate, authController.changePassword);
+
+// Ruta para eliminar cuenta
+router.delete('/account', authenticate, authController.deleteAccount);
+
 module.exports = router; 

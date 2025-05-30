@@ -1,4 +1,5 @@
-const { Card } = require('../models');
+const { Card, Market, Chat, Message, Trade } = require('../models');
+const { sequelize } = require('../config/database');
 const path = require('path');
 const fs = require('fs');
 
@@ -140,14 +141,53 @@ const deleteCard = async (req, res) => {
       return res.status(404).json({ error: 'Carta no encontrada' });
     }
 
-    // Eliminar imagen (si no es la default)
-    const imagePath = path.join(__dirname, '../../', card.imageUrl);
-    if (fs.existsSync(imagePath) && !card.imageUrl.includes('default')) {
-      fs.unlinkSync(imagePath);
-    }
+    // Usar transacción para mantener consistencia
+    await sequelize.transaction(async (t) => {
+      // 1. Encontrar todos los listados de mercado para esta carta
+      const marketListings = await Market.findAll({
+        where: { cardId: id },
+        transaction: t
+      });
 
-    // Eliminar carta de la base de datos
-    await card.destroy();
+      // 2. Para cada listado de mercado, limpiar las relaciones
+      for (const listing of marketListings) {
+        // 2a. Encontrar chats relacionados con este listado
+        const chats = await Chat.findAll({
+          where: { marketId: listing.id },
+          transaction: t
+        });
+
+        // 2b. Para cada chat, eliminar trades y mensajes
+        for (const chat of chats) {
+          // Eliminar trades relacionados
+          await Trade.destroy({
+            where: { chatId: chat.id },
+            transaction: t
+          });
+
+          // Eliminar mensajes relacionados
+          await Message.destroy({
+            where: { chatId: chat.id },
+            transaction: t
+          });
+
+          // Eliminar el chat
+          await chat.destroy({ transaction: t });
+        }
+
+        // 2c. Eliminar el listado del mercado
+        await listing.destroy({ transaction: t });
+      }
+
+      // 3. Eliminar imagen (si no es la default)
+      const imagePath = path.join(__dirname, '../../', card.imageUrl);
+      if (fs.existsSync(imagePath) && !card.imageUrl.includes('default')) {
+        fs.unlinkSync(imagePath);
+      }
+
+      // 4. Finalmente eliminar la carta
+      await card.destroy({ transaction: t });
+    });
 
     return res.status(200).json({ 
       message: 'Carta eliminada correctamente' 

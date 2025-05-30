@@ -1,14 +1,16 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { MarketService } from '../../../services/market.service';
+import { ChatService } from '../../../services/chat.service';
+import { AuthService } from '../../../services/auth.service';
 import { Market } from '../../../models/market';
 import { environment } from '../../../../environments/environment';
 
 @Component({
   selector: 'app-market-detail',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule],
   template: `
     <div class="container mx-auto p-4">
       <div *ngIf="loading" class="text-center py-10">
@@ -70,11 +72,25 @@ import { environment } from '../../../../environments/environment';
 
             <div class="pt-6">
               <button 
+                *ngIf="listing.status === 'available' && currentUser && currentUser.id !== listing.seller?.id"
+                (click)="startChat()"
                 class="w-full bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-md font-medium"
-                [disabled]="listing.status !== 'available'"
-                [class.opacity-50]="listing.status !== 'available'"
               >
-                {{ listing.status === 'available' ? 'Buy Now' : 'Not Available' }}
+                Contact Seller
+              </button>
+              <button 
+                *ngIf="listing.status !== 'available'"
+                disabled
+                class="w-full bg-gray-400 text-white px-6 py-3 rounded-md font-medium opacity-50 cursor-not-allowed"
+              >
+                Not Available
+              </button>
+              <button 
+                *ngIf="!currentUser"
+                (click)="navigateToLogin()"
+                class="w-full bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-md font-medium"
+              >
+                Login to Contact Seller
               </button>
             </div>
           </div>
@@ -89,13 +105,21 @@ export class MarketDetailComponent implements OnInit {
   loading = true;
   error: string | null = null;
   private baseApiUrl = environment.apiUrl.replace('/api', '');
+  currentUser: any = null;
 
   constructor(
     private route: ActivatedRoute,
-    private marketService: MarketService
+    private router: Router,
+    private marketService: MarketService,
+    private chatService: ChatService,
+    private authService: AuthService
   ) {}
 
   ngOnInit(): void {
+    this.authService.currentUser$.subscribe(user => {
+      this.currentUser = user;
+    });
+
     this.route.params.subscribe(params => {
       const id = params['id'];
       if (id) {
@@ -128,6 +152,32 @@ export class MarketDetailComponent implements OnInit {
       return imageUrl;
     }
     
-    return `${this.baseApiUrl}${imageUrl}`;
+    return `${environment.apiUrl.replace('/api', '')}${imageUrl}`;
+  }
+
+  startChat(): void {
+    if (!this.listing || !this.currentUser || !this.listing.id || !this.listing.seller?.id) {
+      this.error = 'Cannot start chat: Missing required information';
+      return;
+    }
+
+    this.chatService.createChat(this.listing.id, this.listing.seller.id).subscribe({
+      next: (response) => {
+        if (response.chat && response.chat.id) {
+          this.router.navigate(['/chat', response.chat.id]);
+        } else {
+          console.error('Invalid chat response:', response);
+          this.error = 'Error starting conversation: Invalid response from server';
+        }
+      },
+      error: (error) => {
+        console.error('Error creating chat:', error);
+        this.error = 'Error starting conversation. Please try again later.';
+      }
+    });
+  }
+
+  navigateToLogin(): void {
+    this.router.navigate(['/login'], { queryParams: { returnUrl: this.router.url } });
   }
 } 

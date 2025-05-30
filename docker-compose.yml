@@ -1,56 +1,75 @@
 version: '3.8'
 
 services:
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "4200:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    environment:
+      - NODE_ENV=production
+      - API_URL=http://backend:3000/api
+    networks:
+      - app-network
+    restart: unless-stopped
+
   backend:
-    build: ./backend
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
     ports:
       - "3000:3000"
-    depends_on:
-      - db
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+      - ./backend/uploads:/app/uploads
     environment:
+      - NODE_ENV=production
       - PORT=3000
-      - NODE_ENV=development
+      - JWT_SECRET=your_jwt_secret_here
       - DB_HOST=db
-      - DB_PORT=5432
-      - DB_NAME=tfg_magic
       - DB_USER=postgres
       - DB_PASSWORD=postgres
-      - JWT_SECRET=your_jwt_secret_key
-      - JWT_EXPIRES_IN=24h
-      - UPLOAD_PATH=uploads
-    volumes:
-      - ./backend/uploads:/app/uploads
-      - ./backend/src:/app/src
-
-  frontend:
-    build: 
-      context: ./frontend
-      dockerfile: Dockerfile.dev
-    ports:
-      - "4200:4200"
-    environment:
-      - NODE_ENV=development
-    volumes:
-      - ./frontend/src:/app/src
-      - ./frontend/angular.json:/app/angular.json
-      - ./frontend/tsconfig.json:/app/tsconfig.json
-      - ./frontend/tsconfig.app.json:/app/tsconfig.app.json
-      - ./frontend/.postcssrc.json:/app/.postcssrc.json
-      - ./frontend/tailwind.config.js:/app/tailwind.config.js
-      - /app/node_modules
+      - DB_NAME=magic_cards
+      - DB_PORT=5432
     depends_on:
-      - backend
+      db:
+        condition: service_healthy
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
 
   db:
     image: postgres:14-alpine
     ports:
       - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
-      - POSTGRES_DB=tfg_magic
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - POSTGRES_DB=magic_cards
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+
+networks:
+  app-network:
+    driver: bridge
 
 volumes:
   postgres_data: 

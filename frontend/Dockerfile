@@ -1,21 +1,33 @@
-FROM node:18-alpine AS build
+FROM node:20-bullseye AS build
+
+# Install essential build tools
+RUN apt-get update && apt-get install -y \
+    python3 \
+    make \
+    g++ \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
+# UPDATE NPM to latest version (has fix for lightningcss issue)
+RUN npm install -g npm@latest
 
 WORKDIR /app
 
-# Copy package.json and package-lock.json
-COPY package*.json ./
+# Copy package.json with optionalDependencies
+COPY package.json ./
 
-# Install dependencies
-RUN npm ci
+# Clean install
+RUN rm -f package-lock.json
+RUN rm -rf node_modules
+RUN npm cache clean --force
+RUN npm install --legacy-peer-deps
 
 # Copy the rest of the application
 COPY . .
 
-# Ensure postcss.config.js is correct
-RUN cat postcss.config.js
-
 # Build with specific environment variables
-RUN NODE_ENV=production npm run build
+ENV NODE_ENV=production
+RUN npm run build
 
 # Production stage
 FROM nginx:alpine

@@ -1,6 +1,5 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { CardService } from '../../services/card.service';
 import { MarketService } from '../../services/market.service'; 
@@ -11,7 +10,7 @@ import { environment } from '../../../environments/environment';
 @Component({
   selector: 'app-my-cards',
   standalone: true,
-  imports: [CommonModule, RouterLink, FormsModule, CardFormComponent],
+  imports: [CommonModule, FormsModule, CardFormComponent],
   template: `
     <div class="container mx-auto p-4">
       <div class="flex justify-between items-center mb-6">
@@ -68,21 +67,42 @@ import { environment } from '../../../environments/environment';
                 <span *ngIf="card.isListed" class="text-sm bg-green-100 text-green-800 px-2 py-1 rounded fixed-text-color">Listed</span>
                 <span *ngIf="!card.isListed" class="text-sm bg-gray-100 text-gray-800 px-2 py-1 rounded fixed-text-color">Not listed</span>
               </div>
-              <div class="mt-4 flex justify-between items-center">
-                <div *ngIf="card.isListed">
-                  <span class="text-sm font-semibold text-green-600">{{ card.price | currency }}</span>
+              <div class="mt-4 flex flex-col space-y-3">
+                <!-- Precio si está listada -->
+                <div *ngIf="card.isListed" class="flex items-center">
+                  <span class="text-lg font-semibold text-green-600">{{ card.price | currency }}</span>
                 </div>
-                <div *ngIf="!card.isListed" class="flex items-center space-x-2">
-                  <button 
-                    class="text-blue-600 hover:text-blue-800 text-sm"
+                
+                <!-- Botones de acción -->
+                <div class="flex flex-wrap gap-2 justify-start">
+                  <!-- Botón para listar en mercado (solo si no está listada) -->
+                  <button *ngIf="!card.isListed" 
+                    class="px-3 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-md transition-colors duration-200"
                     (click)="showSellCardForm(card)"
                   >
                     List on Market
                   </button>
-                </div>
-                <div class="flex space-x-2">
-                  <button class="text-blue-600 hover:text-blue-800" (click)="editCard(card)">Edit</button>
-                  <button class="text-red-600 hover:text-red-800" (click)="deleteCard(card.id!)">Delete</button>
+                  
+                  <!-- Botón para remover del mercado (solo si está listada) -->
+                  <button *ngIf="card.isListed" 
+                    class="px-3 py-2 bg-orange-600 hover:bg-orange-700 text-white text-sm font-medium rounded-md transition-colors duration-200"
+                    (click)="removeFromMarket(card)">
+                    Remove from Market
+                  </button>
+                  
+                  <!-- Botón de editar -->
+                  <button 
+                    class="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-md transition-colors duration-200"
+                    (click)="editCard(card)">
+                    Edit
+                  </button>
+                  
+                  <!-- Botón de eliminar -->
+                  <button 
+                    class="px-3 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-md transition-colors duration-200"
+                    (click)="deleteCard(card.id!)">
+                    Delete
+                  </button>
                 </div>
               </div>
             </div>
@@ -403,6 +423,21 @@ export class MyCardsComponent implements OnInit {
           this.applyFilters();
         },
         error: (error) => console.error('Error deleting card', error)
+      });
+    }
+  }
+
+  removeFromMarket(card: Card): void {
+    if (confirm('¿Estás seguro de que quieres remover esta carta del mercado?')) {
+      this.marketService.unlistCard(card.id!).subscribe({
+        next: () => {
+          // Recargar las cartas para obtener el estado actualizado
+          this.loadCards();
+        },
+        error: (error: any) => {
+          console.error('Error removing card from market', error);
+          alert('Ha ocurrido un error al remover la carta del mercado. Por favor, inténtalo de nuevo.');
+        }
       });
     }
   }

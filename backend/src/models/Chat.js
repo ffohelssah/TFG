@@ -50,13 +50,6 @@ const Chat = sequelize.define('Chat', {
   timestamps: true
 });
 
-// Establecer relaciones
-Chat.belongsTo(User, { as: 'user1', foreignKey: 'userId1' });
-Chat.belongsTo(User, { as: 'user2', foreignKey: 'userId2' });
-Chat.belongsTo(Market, { foreignKey: 'marketId' });
-
-User.hasMany(Chat, { as: 'chatsAsUser1', foreignKey: 'userId1' });
-User.hasMany(Chat, { as: 'chatsAsUser2', foreignKey: 'userId2' });
-Market.hasMany(Chat, { foreignKey: 'marketId' });
+// Relaciones definidas en models/index.js
 
 module.exports = Chat; 

@@ -45,11 +45,6 @@ const Market = sequelize.define('Market', {
   timestamps: true
 });
 
-// Establecer relaciones
-Market.belongsTo(Card, { foreignKey: 'cardId' });
-Card.hasOne(Market, { foreignKey: 'cardId' });
-
-Market.belongsTo(User, { as: 'seller', foreignKey: 'sellerId' });
-User.hasMany(Market, { as: 'listings', foreignKey: 'sellerId' });
+// Relaciones definidas en models/index.js
 
 module.exports = Market; 

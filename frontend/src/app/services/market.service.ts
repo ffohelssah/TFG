@@ -53,4 +53,8 @@ export class MarketService {
   deleteListing(id: number): Observable<any> {
     return this.http.delete(`${this.apiUrl}/${id}`);
   }
+
+  unlistCard(cardId: number): Observable<any> {
+    return this.http.delete(`${this.apiUrl}/card/${cardId}`);
+  }
 } 

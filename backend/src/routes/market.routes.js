@@ -18,4 +18,7 @@ router.get('/user/listings', marketController.getUserListings);
 router.put('/:id', marketValidators.update, validate, marketController.updateListing);
 router.delete('/:id', marketValidators.delete, validate, marketController.deleteListing);
 
+// Ruta para eliminar listado por cardId
+router.delete('/card/:cardId', marketController.unlistCardByCardId);
+
 module.exports = router; 

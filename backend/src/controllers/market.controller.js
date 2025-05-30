@@ -1,4 +1,4 @@
-const { Market, Card, User } = require('../models');
+const { Market, Card, User, Chat } = require('../models');
 const { sequelize } = require('../config/database');
 
 // Listar una carta en el mercado
@@ -16,23 +16,47 @@ const listCard = async (req, res) => {
       return res.status(404).json({ error: 'Carta no encontrada' });
     }
 
-    // Verificar que la carta no esté ya listada
+    // Verificar que la carta no esté ya listada activamente
     const existingListing = await Market.findOne({
-      where: { cardId }
+      where: { 
+        cardId,
+        status: 'available'
+      }
     });
 
     if (existingListing) {
       return res.status(400).json({ error: 'Esta carta ya está listada en el mercado' });
     }
 
-    // Crear listado en el mercado
-    const listing = await Market.create({
-      cardId,
-      sellerId: userId,
-      price,
-      description,
-      status: 'available'
+    // Verificar si existe un listado previo inactivo (sold/pending) para reutilizarlo
+    const inactiveListing = await Market.findOne({
+      where: { 
+        cardId,
+        status: ['sold', 'pending']
+      }
     });
+
+    let listing;
+    
+    if (inactiveListing) {
+      // Reutilizar el listado existente actualizando sus valores
+      listing = await inactiveListing.update({
+        sellerId: userId,
+        price,
+        description,
+        status: 'available',
+        listedAt: new Date()
+      });
+    } else {
+      // Crear nuevo listado en el mercado
+      listing = await Market.create({
+        cardId,
+        sellerId: userId,
+        price,
+        description,
+        status: 'available'
+      });
+    }
 
     // Actualizar estado de la carta
     await card.update({ isListed: true, price });
@@ -252,11 +276,79 @@ const deleteListing = async (req, res) => {
   }
 };
 
+// Eliminar un listado por cardId (más conveniente para el frontend)
+const unlistCardByCardId = async (req, res) => {
+  try {
+    const { cardId } = req.params;
+    const userId = req.user.id;
+    
+    // Primero verificar que la carta existe y pertenece al usuario
+    const card = await Card.findOne({
+      where: { id: cardId, userId }
+    });
+
+    if (!card) {
+      return res.status(404).json({ error: 'Carta no encontrada' });
+    }
+
+    // Verificar si existe un listado en el mercado para esta carta
+    const listing = await Market.findOne({
+      where: {
+        cardId,
+        sellerId: userId
+      }
+    });
+
+    // Caso 1: La carta tiene un listado activo en el mercado
+    if (listing) {
+      await sequelize.transaction(async (t) => {
+        // Cambiar estado del listado a 'sold' en lugar de eliminarlo
+        await listing.update({ 
+          status: 'sold'
+        }, { transaction: t });
+        
+        // Actualizar estado de la carta
+        await card.update({ 
+          isListed: false,
+          price: null 
+        }, { transaction: t });
+      });
+
+      return res.status(200).json({
+        message: 'Carta removida del mercado correctamente'
+      });
+    }
+    
+    // Caso 2: La carta está marcada como listada pero no tiene registro en Markets
+    // (estado inconsistente, posiblemente debido a un trade anterior)
+    if (card.isListed) {
+      await card.update({ 
+        isListed: false,
+        price: null 
+      });
+
+      return res.status(200).json({
+        message: 'Estado de la carta corregido - removida del mercado'
+      });
+    }
+
+    // Caso 3: La carta no está listada en absoluto
+    return res.status(400).json({ 
+      error: 'Esta carta no está listada en el mercado' 
+    });
+
+  } catch (error) {
+    console.error('Error al remover carta del mercado:', error);
+    return res.status(500).json({ error: 'Error al remover la carta del mercado' });
+  }
+};
+
 module.exports = {
   listCard,
   getListings,
   getListingById,
   getUserListings,
   updateListing,
-  deleteListing
+  deleteListing,
+  unlistCardByCardId
 }; 

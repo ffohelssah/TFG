@@ -18,6 +18,10 @@ export class SocketService {
     this.socket.emit('join_room', roomId);
   }
 
+  leaveRoom(roomId: string): void {
+    this.socket.emit('leave_room', roomId);
+  }
+
   sendMessage(data: { room: string, message: Message }): void {
     this.socket.emit('send_message', data);
   }

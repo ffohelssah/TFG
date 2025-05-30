@@ -48,8 +48,6 @@ const Card = sequelize.define('Card', {
   timestamps: true
 });
 
-// Establecer relación con el modelo User
-Card.belongsTo(User, { foreignKey: 'userId' });
-User.hasMany(Card, { foreignKey: 'userId' });
+// Relaciones definidas en models/index.js
 
 module.exports = Card; 

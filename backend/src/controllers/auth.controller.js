@@ -109,8 +109,109 @@ const getProfile = async (req, res) => {
   }
 };
 
+// Actualizar perfil de usuario
+const updateProfile = async (req, res) => {
+  try {
+    const { username, email } = req.body;
+    const userId = req.user.id;
+
+    // Verificar si el nuevo username o email ya están en uso por otro usuario
+    if (username && username !== req.user.username) {
+      const existingUser = await User.findOne({ 
+        where: { 
+          username,
+          id: { [Op.ne]: userId }
+        }
+      });
+      if (existingUser) {
+        return res.status(400).json({ error: 'Username already taken' });
+      }
+    }
+
+    if (email && email !== req.user.email) {
+      const existingUser = await User.findOne({ 
+        where: { 
+          email,
+          id: { [Op.ne]: userId }
+        }
+      });
+      if (existingUser) {
+        return res.status(400).json({ error: 'Email already in use' });
+      }
+    }
+
+    // Actualizar usuario
+    await User.update(
+      { username, email },
+      { where: { id: userId } }
+    );
+
+    // Obtener usuario actualizado
+    const updatedUser = await User.findByPk(userId);
+    const userData = {
+      id: updatedUser.id,
+      username: updatedUser.username,
+      email: updatedUser.email,
+      role: updatedUser.role,
+      profilePicture: updatedUser.profilePicture,
+      createdAt: updatedUser.createdAt
+    };
+
+    return res.status(200).json({ 
+      user: userData, 
+      message: 'Profile updated successfully' 
+    });
+  } catch (error) {
+    console.error('Error updating profile:', error);
+    return res.status(500).json({ error: 'Error updating profile' });
+  }
+};
+
+// Cambiar contraseña
+const changePassword = async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    const userId = req.user.id;
+
+    // Verificar contraseña actual
+    const user = await User.findByPk(userId);
+    const isCurrentPasswordValid = await user.validatePassword(currentPassword);
+    
+    if (!isCurrentPasswordValid) {
+      return res.status(400).json({ error: 'Current password is incorrect' });
+    }
+
+    // Actualizar contraseña
+    user.password = newPassword;
+    await user.save();
+
+    return res.status(200).json({ message: 'Password changed successfully' });
+  } catch (error) {
+    console.error('Error changing password:', error);
+    return res.status(500).json({ error: 'Error changing password' });
+  }
+};
+
+// Eliminar cuenta
+const deleteAccount = async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    // Eliminar usuario (esto también eliminará registros relacionados por las foreign keys)
+    await User.destroy({ where: { id: userId } });
+
+    return res.status(200).json({ message: 'Account deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting account:', error);
+    return res.status(500).json({ error: 'Error deleting account' });
+  }
+};
+
 module.exports = {
   register,
   login,
-  getProfile
+  getProfile,
+  updateProfile,
+  changePassword,
+  deleteAccount
 }; 

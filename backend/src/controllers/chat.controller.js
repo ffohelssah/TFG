@@ -1,5 +1,5 @@
 const { Chat, Message, User, Market, Card } = require('../models');
-const { sequelize } = require('../config/database');
+const { sequelize, Op } = require('../config/database');
 
 // Crear un nuevo chat
 const createChat = async (req, res) => {
@@ -25,7 +25,7 @@ const createChat = async (req, res) => {
     const existingChat = await Chat.findOne({
       where: {
         marketId,
-        [sequelize.Op.or]: [
+        [Op.or]: [
           { userId1: userId, userId2: listing.sellerId },
           { userId1: listing.sellerId, userId2: userId }
         ]
@@ -64,7 +64,7 @@ const getUserChats = async (req, res) => {
     // Buscar chats donde el usuario es participante
     const chats = await Chat.findAll({
       where: {
-        [sequelize.Op.or]: [
+        [Op.or]: [
           { userId1: userId },
           { userId2: userId }
         ],
@@ -83,35 +83,28 @@ const getUserChats = async (req, res) => {
         },
         {
           model: Market,
+          required: false, // LEFT JOIN para evitar que se filtren chats sin market
           include: [{
             model: Card,
-            attributes: ['name', 'imageUrl']
+            required: false,
+            attributes: ['id', 'name', 'imageUrl', 'edition', 'condition']
           }]
         }
       ],
       order: [['lastActivity', 'DESC']]
     });
 
-    // Formatear respuesta para facilitar uso en el cliente
-    const formattedChats = chats.map(chat => {
-      const otherUser = chat.userId1 === userId ? chat.user2 : chat.user1;
-      
-      return {
-        id: chat.id,
-        roomId: chat.roomId,
-        marketId: chat.marketId,
-        otherUser: {
-          id: otherUser.id,
-          username: otherUser.username,
-          profilePicture: otherUser.profilePicture
-        },
-        card: chat.Market?.Card,
-        lastActivity: chat.lastActivity,
-        createdAt: chat.createdAt
-      };
+    // Filtrar chats que realmente deberían existir (que tienen market válido)
+    const validChats = chats.filter(chat => {
+      // Si el chat no tiene market asociado, podría ser huérfano
+      if (!chat.Market) {
+        console.log(`Chat ${chat.id} has no associated market, might be orphaned`);
+        return false;
+      }
+      return true;
     });
 
-    return res.status(200).json({ chats: formattedChats });
+    return res.status(200).json(validChats);
   } catch (error) {
     console.error('Error al obtener chats del usuario:', error);
     return res.status(500).json({ error: 'Error al obtener los chats del usuario' });
@@ -128,7 +121,7 @@ const getChatMessages = async (req, res) => {
     const chat = await Chat.findOne({
       where: {
         id: chatId,
-        [sequelize.Op.or]: [
+        [Op.or]: [
           { userId1: userId },
           { userId2: userId }
         ]
@@ -156,14 +149,40 @@ const getChatMessages = async (req, res) => {
       {
         where: {
           chatId,
-          senderId: { [sequelize.Op.ne]: userId },
+          senderId: { [Op.ne]: userId },
           read: false
         }
       }
     );
 
+    // Incluir información del chat con las relaciones
+    const chatWithDetails = await Chat.findByPk(chatId, {
+      include: [
+        {
+          model: User,
+          as: 'user1',
+          attributes: ['id', 'username', 'profilePicture']
+        },
+        {
+          model: User,
+          as: 'user2',
+          attributes: ['id', 'username', 'profilePicture']
+        },
+        {
+          model: Market,
+          required: false,
+          include: [{
+            model: Card,
+            required: false,
+            attributes: ['id', 'name', 'imageUrl', 'edition', 'condition']
+          }]
+        }
+      ]
+    });
+
     return res.status(200).json({ 
       messages,
+      chat: chatWithDetails,
       roomId: chat.roomId 
     });
   } catch (error) {
@@ -183,7 +202,7 @@ const sendMessage = async (req, res) => {
     const chat = await Chat.findOne({
       where: {
         id: chatId,
-        [sequelize.Op.or]: [
+        [Op.or]: [
           { userId1: userId },
           { userId2: userId }
         ]
@@ -230,7 +249,7 @@ const markAsRead = async (req, res) => {
     const chat = await Chat.findOne({
       where: {
         id: chatId,
-        [sequelize.Op.or]: [
+        [Op.or]: [
           { userId1: userId },
           { userId2: userId }
         ]
@@ -247,7 +266,7 @@ const markAsRead = async (req, res) => {
       {
         where: {
           chatId,
-          senderId: { [sequelize.Op.ne]: userId },
+          senderId: { [Op.ne]: userId },
           read: false
         }
       }
@@ -263,10 +282,111 @@ const markAsRead = async (req, res) => {
   }
 };
 
+// Obtener conteo de mensajes no leídos
+const getUnreadCounts = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    console.log('Getting unread counts for user:', userId);
+    
+    // Obtener todos los chats del usuario
+    const chats = await Chat.findAll({
+      where: {
+        [Op.or]: [
+          { userId1: userId },
+          { userId2: userId }
+        ],
+        isActive: true
+      }
+    });
+
+    const chatIds = chats.map(chat => chat.id);
+    
+    // Contar mensajes no leídos por chat
+    const unreadMessagesCounts = await Message.findAll({
+      where: {
+        chatId: { [Op.in]: chatIds },
+        senderId: { [Op.ne]: userId },
+        read: false
+      },
+      attributes: ['chatId', [sequelize.fn('COUNT', sequelize.col('id')), 'count']],
+      group: ['chatId']
+    });
+
+    // Calcular total y chats con mensajes no leídos
+    let totalUnread = 0;
+    const unreadChatIds = [];
+    
+    unreadMessagesCounts.forEach(item => {
+      const count = parseInt(item.dataValues.count);
+      totalUnread += count;
+      if (count > 0) {
+        unreadChatIds.push(item.chatId);
+      }
+    });
+
+    console.log('Returning unread counts:', { totalUnread, unreadChatIds });
+    return res.status(200).json({
+      totalUnread,
+      unreadChatIds
+    });
+  } catch (error) {
+    console.error('Error al obtener conteo de mensajes no leídos:', error);
+    return res.status(500).json({ error: 'Error al obtener el conteo de mensajes no leídos' });
+  }
+};
+
+// Limpiar chats huérfanos (sin market asociado)
+const cleanupOrphanedChats = async (req, res) => {
+  try {
+    // Buscar chats que no tienen market asociado
+    const orphanedChats = await Chat.findAll({
+      include: [{
+        model: Market,
+        required: false
+      }],
+      where: {
+        '$Market.id$': null // Chats sin market asociado
+      }
+    });
+
+    if (orphanedChats.length === 0) {
+      return res.status(200).json({ 
+        message: 'No orphaned chats found',
+        deletedCount: 0 
+      });
+    }
+
+    const chatIds = orphanedChats.map(chat => chat.id);
+    console.log(`Found ${orphanedChats.length} orphaned chats: ${chatIds.join(', ')}`);
+
+    // Eliminar chats huérfanos
+    const deletedCount = await Chat.destroy({
+      where: {
+        id: chatIds
+      },
+      force: true
+    });
+
+    console.log(`Cleanup completed. Deleted ${deletedCount} orphaned chats.`);
+
+    return res.status(200).json({ 
+      message: `Cleaned up ${deletedCount} orphaned chats`,
+      deletedChats: chatIds,
+      deletedCount 
+    });
+
+  } catch (error) {
+    console.error('Error cleaning up orphaned chats:', error);
+    return res.status(500).json({ error: 'Error cleaning up orphaned chats' });
+  }
+};
+
 module.exports = {
   createChat,
   getUserChats,
   getChatMessages,
   sendMessage,
-  markAsRead
+  markAsRead,
+  getUnreadCounts,
+  cleanupOrphanedChats
 }; 
