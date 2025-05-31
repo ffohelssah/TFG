@@ -41,8 +41,7 @@ Una plataforma completa para la compra, venta e intercambio de cartas Magic The 
 - **Precios Competitivos**: Sistema de ofertas
 - **Estados de Listado**: Activo, vendido, retirado
 
-### 💬 Chat en Tiempo Real
-- **Mensajería Instantánea**: WebSocket con Socket.io
+### 💬 Chat 
 - **Notificaciones**: Contadores de mensajes no leídos
 - **Historial**: Persistencia de conversaciones
 - **Estados de Lectura**: Seguimiento de mensajes leídos
@@ -104,7 +103,6 @@ Frontend (Angular) ↔ HTTP/WebSocket ↔ Backend (Express) ↔ PostgreSQL
 | Express.js | 4.21+ | Framework web |
 | PostgreSQL | 17+ | Base de datos relacional |
 | Sequelize | 6.37+ | ORM para PostgreSQL |
-| Socket.io | 4.8+ | Comunicación en tiempo real |
 | JWT | 9.0+ | Autenticación |
 | Multer | 1.4+ | Carga de archivos |
 | bcrypt | 5.1+ | Encriptación de contraseñas |
@@ -115,8 +113,6 @@ Frontend (Angular) ↔ HTTP/WebSocket ↔ Backend (Express) ↔ PostgreSQL
 | Angular | 19+ | Framework frontend |
 | TypeScript | 5.7+ | Lenguaje tipado |
 | Tailwind CSS | 3.4+ | Framework de estilos |
-| RxJS | 7.8+ | Programación reactiva |
-| Socket.io Client | 4.8+ | Cliente WebSocket |
 
 ### DevOps & Tools
 | Tecnología | Propósito |
